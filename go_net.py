@@ -356,8 +356,8 @@ class GoNet(multiprocessing.Process):
         images_tensor, labels_tensor = self.data.create_input_tensors_for_dataset(data_type='test',
                                                                                   batch_size=self.batch_size)
         # Attach names to the tensors.
-        images_tensor = tf.identity(images_tensor, name='images_tensor')
-        labels_tensor = tf.identity(labels_tensor, name='labels_tensor')
+        images_tensor = tf.identity(images_tensor, name='images_input_op')
+        labels_tensor = tf.identity(labels_tensor, name='labels_input_op')
         return images_tensor, labels_tensor
 
     def create_running_average_summary(self, tensor, summary_name=None):
