@@ -6,7 +6,7 @@ from unittest.mock import patch, Mock
 
 import numpy as np
 
-from gonet.go_data import GoData
+from gonet.data import Data
 
 
 class TestData:
@@ -14,7 +14,7 @@ class TestData:
     @patch('h5py.File')
     def test_convert_mat_file_to_numpy_file_reads_the_mat_file(self, h5py_file_mock, mock_numpy_save):
         mat_file_name = 'fake name'
-        go_data = GoData()
+        go_data = Data()
         go_data.crop_data = Mock()
         go_data.convert_mat_data_to_numpy_array = Mock()
 
@@ -27,7 +27,7 @@ class TestData:
     def test_convert_mat_file_to_numpy_file_calls_extract_mat_data_to_numpy_array(self, h5py_file_mock,
                                                                                   mock_numpy_save):
         h5py_file_mock.return_value = 'fake mat data'
-        go_data = GoData()
+        go_data = Data()
         go_data.convert_mat_data_to_numpy_array = Mock()
         go_data.crop_data = Mock()
 
@@ -37,7 +37,7 @@ class TestData:
         assert go_data.convert_mat_data_to_numpy_array.call_args_list[0][0] == ('fake mat data', 'images')
 
     def test_convert_mat_data_to_numpy_array_extracts_and_tranposes_the_data(self):
-        go_data = GoData()
+        go_data = Data()
         mock_mat_data = Mock()
         mock_mat_data.get.return_value = np.array([[[[1, 2, 3]]]])
 
@@ -49,7 +49,7 @@ class TestData:
     @patch('h5py.File')
     @patch('numpy.save')
     def test_convert_mat_file_to_numpy_file_writes_extracted_numpys_to_files(self, mock_numpy_save, h5py_file_mock):
-        go_data = GoData()
+        go_data = Data()
         go_data.convert_mat_data_to_numpy_array = Mock(side_effect=[1, 2])
         go_data.crop_data = lambda x: x
 
@@ -59,7 +59,7 @@ class TestData:
         assert mock_numpy_save.call_args_list[1] == ((os.path.join('depths_') + '.npy', 2),)
 
     def test_convert_mat_data_to_numpy_array_can_specify_the_number_of_images_to_extract(self):
-        go_data = GoData()
+        go_data = Data()
         mock_mat_data = Mock()
         mock_mat_data.get.return_value = np.array([[[[1]]], [[[2]]], [[[3]]]])
 
@@ -73,7 +73,7 @@ class TestData:
     def test_convert_mat_file_to_numpy_file_passes_can_be_called_on_a_specific_number_of_images(self,
                                                                                                 mock_numpy_save,
                                                                                                 h5py_file_mock):
-        go_data = GoData()
+        go_data = Data()
         mock_convert = Mock()
         go_data.convert_mat_data_to_numpy_array = mock_convert
         go_data.crop_data = Mock()
@@ -83,7 +83,7 @@ class TestData:
         assert mock_convert.call_args[1]['number_of_samples'] == 2
 
     def test_crop_data_removes_edge_data(self):
-        go_data = GoData()
+        go_data = Data()
         array = np.arange(324.0).reshape((1, 18, 18))
 
         cropped_array = go_data.crop_data(array)
@@ -93,7 +93,7 @@ class TestData:
     def test_rebin_outputs_the_right_types_based_on_dimensions(self):
         four_dimensions = np.array([[[[1]]]])  # Collection of images.
         three_dimensions = np.array([[[1]]])  # Collection of depths.
-        go_data = GoData()
+        go_data = Data()
         go_data.image_width = 1
         go_data.image_height = 1
         go_data.image_depth = 1

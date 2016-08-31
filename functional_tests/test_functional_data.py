@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 
-from gonet.go_data import GoData
+from gonet.data import Data
 
 
 class TestFunctionalData:
@@ -17,7 +17,7 @@ class TestFunctionalData:
         mat_file_path = os.path.join('functional_tests', 'test_data', 'nyud_micro.mat')
 
         # Run the conversion script.
-        GoData().convert_mat_file_to_numpy_file(mat_file_path)
+        Data().convert_mat_file_to_numpy_file(mat_file_path)
 
         # Check that the files are created.
         assert os.path.isfile(images_numpy_file_path)

@@ -8,15 +8,15 @@ import time
 
 import numpy as np
 import tensorflow as tf
-from gonet.go_data import GoData
+from gonet.data import Data
 from gonet.interface import Interface
 
 from gonet.convenience import weight_variable, bias_variable
 
 
-class GoNet(multiprocessing.Process):
+class Net(multiprocessing.Process):
     """
-    The class to build and interact with the GoNet TensorFlow graph.
+    The class to build and interact with the Net TensorFlow graph.
     """
 
     def __init__(self, message_queue=None):
@@ -25,7 +25,7 @@ class GoNet(multiprocessing.Process):
         # Common variables.
         self.batch_size = 3
         self.initial_learning_rate = 0.00001
-        self.data = GoData()
+        self.data = Data()
         self.dropout_keep_probability = 0.5
         self.network_name = 'go_net'
 
@@ -516,5 +516,5 @@ class GoNet(multiprocessing.Process):
         return os.path.join('models', latest_model_name)
 
 if __name__ == '__main__':
-    interface = Interface(network_class=GoNet)
+    interface = Interface(network_class=Net)
     interface.run()

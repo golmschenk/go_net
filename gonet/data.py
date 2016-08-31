@@ -7,12 +7,12 @@ import os
 import h5py
 import numpy as np
 import tensorflow as tf
-from gonet.go_tfrecords_reader import GoTFRecordsReader
+from gonet.tfrecords_reader import TFRecordsReader
 
 from gonet.convenience import random_boolean_tensor
 
 
-class GoData:
+class Data:
     """
     A class for managing the TFRecord data.
     """
@@ -136,7 +136,7 @@ class GoData:
         :return: The read file data including the image data and label data.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        go_tfrecords_reader = GoTFRecordsReader(file_name_queue, data_type=data_type)
+        go_tfrecords_reader = TFRecordsReader(file_name_queue, data_type=data_type)
         image = tf.cast(go_tfrecords_reader.image, tf.float32)
         label = go_tfrecords_reader.label
 
@@ -456,5 +456,5 @@ def _bytes_feature(value):
 
 
 if __name__ == '__main__':
-    data = GoData()
+    data = Data()
     data.generate_all_tfrecords()

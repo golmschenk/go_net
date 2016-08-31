@@ -11,7 +11,7 @@ import re
 from PIL import Image
 
 
-class GoConverter:
+class Converter:
     """
     A class for simple conversions of data.
     """
