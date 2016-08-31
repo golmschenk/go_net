@@ -1,13 +1,12 @@
 """
 Tests the data preparation scripts.
 """
-import os
 import math
-import numpy as np
-import tensorflow as tf
-from pytest import fail
+import os
 
-from go_data import GoData
+import numpy as np
+
+from gonet.go_data import GoData
 
 
 class TestFunctionalData:

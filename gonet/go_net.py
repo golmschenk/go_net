@@ -5,12 +5,13 @@ import datetime
 import multiprocessing
 import os
 import time
-import tensorflow as tf
-import numpy as np
 
-from convenience import weight_variable, bias_variable
-from go_data import GoData
-from interface import Interface
+import numpy as np
+import tensorflow as tf
+from gonet.go_data import GoData
+from gonet.interface import Interface
+
+from gonet.convenience import weight_variable, bias_variable
 
 
 class GoNet(multiprocessing.Process):

@@ -3,12 +3,13 @@ Code for managing the TFRecord data.
 """
 import glob
 import os
+
 import h5py
 import numpy as np
 import tensorflow as tf
+from gonet.go_tfrecords_reader import GoTFRecordsReader
 
-from convenience import random_boolean_tensor
-from go_tfrecords_reader import GoTFRecordsReader
+from gonet.convenience import random_boolean_tensor
 
 
 class GoData:

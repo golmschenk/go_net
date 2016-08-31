@@ -1,7 +1,7 @@
 """
 Tests for the convenience module.
 """
-from convenience import size_from_stride_two
+from gonet.convenience import size_from_stride_two
 
 
 class TestConvenience:

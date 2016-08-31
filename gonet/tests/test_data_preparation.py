@@ -1,11 +1,12 @@
 """
 Unit tests for the go_data module.
 """
-from unittest.mock import patch, Mock
 import os
+from unittest.mock import patch, Mock
+
 import numpy as np
 
-from go_data import GoData
+from gonet.go_data import GoData
 
 
 class TestData:

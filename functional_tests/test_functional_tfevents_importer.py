@@ -4,7 +4,7 @@ Tests for the TFEventsImporter
 
 import os
 
-from tfevents_importer import TFEventsImporter
+from gonet.tfevents_importer import TFEventsImporter
 
 
 class TestFunctionalTFEventsImporter:
