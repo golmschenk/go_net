@@ -131,7 +131,7 @@ class Converter:
         np.save(output_numpy_path, new_images)
 
     @staticmethod
-    def stack_numpy_directory(input_directory, output_numpy_path):
+    def stack_numpy_directory(input_directory, output_numpy_path, substring=None):
         """
         Stacks the numpy files in a directory into a single file.
 
@@ -139,11 +139,14 @@ class Converter:
         :type input_directory: str
         :param output_numpy_path: Where to output the stacked file.
         :type output_numpy_path: str
+        :param substring: Optional requirement that the file includes this parameter in its name.
+        :type substring: str
         """
         numpy_arrays = []
         for file_name in os.listdir(input_directory):
             if file_name.endswith('.npy'):
-                numpy_arrays.append(np.load(os.path.join(input_directory, file_name)))
+                if not substring or substring in file_name:
+                    numpy_arrays.append(np.load(os.path.join(input_directory, file_name)))
         numpy_stack = np.stack(numpy_arrays)
         np.save(output_numpy_path, numpy_stack)
 
@@ -165,3 +168,8 @@ class Converter:
                 images.append(image)
         images = np.stack(images)
         np.save(output_numpy_path, images)
+
+if __name__ == '__main__':
+    c = Converter()
+    c.stack_image_directory_as_numpy('/Users/golmschenk/Downloads/CAM_204_1', '/Users/golmschenk/Downloads/CAM_204_1_labels.npy')
+    c.stack_image_directory_as_numpy('/Users/golmschenk/Downloads/CAM_204_1', '/Users/golmschenk/Downloads/CAM_204_1_images.npy')
