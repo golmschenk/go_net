@@ -169,7 +169,3 @@ class Converter:
         images = np.stack(images)
         np.save(output_numpy_path, images)
 
-if __name__ == '__main__':
-    c = Converter()
-    c.stack_image_directory_as_numpy('/Users/golmschenk/Downloads/CAM_204_1', '/Users/golmschenk/Downloads/CAM_204_1_labels.npy')
-    c.stack_image_directory_as_numpy('/Users/golmschenk/Downloads/CAM_204_1', '/Users/golmschenk/Downloads/CAM_204_1_images.npy')
