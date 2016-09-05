@@ -129,3 +129,39 @@ class Converter:
         else:
             new_images = images[:, :, :, [2, 1, 0]]
         np.save(output_numpy_path, new_images)
+
+    @staticmethod
+    def stack_numpy_directory(input_directory, output_numpy_path):
+        """
+        Stacks the numpy files in a directory into a single file.
+
+        :param input_directory: The directory to stack.
+        :type input_directory: str
+        :param output_numpy_path: Where to output the stacked file.
+        :type output_numpy_path: str
+        """
+        numpy_arrays = []
+        for file_name in os.listdir(input_directory):
+            if file_name.endswith('.npy'):
+                numpy_arrays.append(np.load(os.path.join(input_directory, file_name)))
+        numpy_stack = np.stack(numpy_arrays)
+        np.save(output_numpy_path, numpy_stack)
+
+    @staticmethod
+    def stack_image_directory_as_numpy(input_directory, output_numpy_path):
+        """
+        Convert the images in a directory to a stacked numpy file.
+
+        :param input_directory: The directory containing the images.
+        :type input_directory: str
+        :param output_numpy_path: Where to output the numpy file to.
+        :type output_numpy_path:  str
+        """
+        images = []
+        for file_name in os.listdir(input_directory):
+            image_types = ('.jpg', '.jpeg', '.png')
+            if file_name.endswith(image_types):
+                image = np.asarray(Image.open(os.path.join(input_directory, file_name)), dtype="uint8")
+                images.append(image)
+        images = np.stack(images)
+        np.save(output_numpy_path, images)
