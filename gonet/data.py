@@ -460,7 +460,7 @@ def _int64_feature(value):
 
 
 def _float_feature(value):
-    return tf.train.Feature(int64_list=tf.train.FloatList(value=[value]))
+    return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 
 
 def _bytes_feature(value):
