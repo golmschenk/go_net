@@ -28,6 +28,10 @@ class TFRecordsReader:
                 'label_depth': tf.FixedLenFeature([], tf.int64),
                 'label_raw': tf.FixedLenFeature([], tf.string)
             })
+        feature_types.update({
+            'slope': tf.FixedLenFeature([], tf.float32),
+            'intercept': tf.FixedLenFeature([], tf.float32),
+        })
         features = tf.parse_single_example(serialized_example, features=feature_types)
 
         self.image_shape, self.label_shape = self.extract_shapes_from_tfrecords_features(features)
@@ -41,6 +45,8 @@ class TFRecordsReader:
         else:
             # Makes a fake label tensor for preprocessing to work on.
             self.label = tf.constant(-1.0, dtype=tf.float32, shape=[1, 1, 1])
+        self.slope = features['slope']
+        self.intercept = features['intercept']
 
     def extract_shapes_from_tfrecords_features(self, features):
         """

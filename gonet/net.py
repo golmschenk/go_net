@@ -78,11 +78,11 @@ class Net(multiprocessing.Process):
         print('Preparing data...')
         # Setup the inputs.
         with tf.name_scope('Input'):
-            images_tensor, labels_tensor = self.create_input_tensors()
+            images_tensor, labels_tensor, s_t, i_t = self.create_input_tensors()
 
         print('Building graph...')
         # Add the forward pass operations to the graph.
-        predicted_labels_tensor = self.create_inference_op(images_tensor)
+        predicted_labels_tensor = self.create_inference_op(images_tensor, s_t, i_t)
 
         # Add the loss operations to the graph.
         with tf.name_scope('loss'):
@@ -170,7 +170,7 @@ class Net(multiprocessing.Process):
         coordinator.join(threads)
         self.session.close()
 
-    def create_inference_op(self, images):
+    def create_inference_op(self, images, s_t, i_t):
         """
         Performs a forward pass estimating label maps from RGB images.
 
@@ -400,14 +400,14 @@ class Net(multiprocessing.Process):
 
         :param dataset_dictionary: A dictionary containing as keys the names of the datasets and as values a pair with
                                    containing the images and labels of that dataset.
-        :type dataset_dictionary: dict[str, (tf.Tensor, tf.Tensor)]
+        :type dataset_dictionary: dict[str, (tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor)]
         :return: The general images and labels tensor produced by the case statement, as well as the selector tensor.
-        :rtype: (tf.Tensor, tf.Tensor)
+        :rtype: (tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor)
         """
-        images_tensor, labels_tensor = tf.cond(tf.equal(self.dataset_selector_tensor, 'validation'),
-                                               lambda: dataset_dictionary['validation'],
-                                               lambda: dataset_dictionary['train'])
-        return images_tensor, labels_tensor
+        images_tensor, labels_tensor, s_t, i_t = tf.cond(tf.equal(self.dataset_selector_tensor, 'validation'),
+                                                         lambda: dataset_dictionary['validation'],
+                                                         lambda: dataset_dictionary['train'])
+        return images_tensor, labels_tensor, s_t, i_t
 
     def create_input_tensors(self):
         """
@@ -415,37 +415,37 @@ class Net(multiprocessing.Process):
         during runtime.
 
         :return: The general images and labels tensors which are conditional on a selector tensor.
-        :rtype: (tf.Tensor, tf.Tensor)
+        :rtype: (tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor)
         """
-        training_images_tensor, training_labels_tensor = self.data.create_input_tensors_for_dataset(
+        training_images_tensor, training_labels_tensor, t_s_t, t_i_t = self.data.create_input_tensors_for_dataset(
             data_type='train',
             batch_size=self.batch_size
         )
-        validation_images_tensor, validation_labels_tensor = self.data.create_input_tensors_for_dataset(
+        validation_images_tensor, validation_labels_tensor, v_s_t, v_i_t = self.data.create_input_tensors_for_dataset(
             data_type='validation',
             batch_size=self.batch_size
         )
-        images_tensor, labels_tensor = self.create_feed_selectable_input_tensors(
+        images_tensor, labels_tensor, s_t, i_t = self.create_feed_selectable_input_tensors(
             {
-                'train': (training_images_tensor, training_labels_tensor),
-                'validation': (validation_images_tensor, validation_labels_tensor)
+                'train': (training_images_tensor, training_labels_tensor, t_s_t, t_i_t),
+                'validation': (validation_images_tensor, validation_labels_tensor, v_s_t, v_i_t)
             }
         )
-        return images_tensor, labels_tensor
+        return images_tensor, labels_tensor, s_t, i_t
 
     def create_test_dataset_input_tensors(self):
         """
         Creates the images input tensor for the test dataset.
 
         :return: The images and labels tensors for the test dataset.
-        :rtype: tf.Tensor, tf.Tensor
+        :rtype: tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor
         """
-        images_tensor, labels_tensor = self.data.create_input_tensors_for_dataset(data_type='test',
-                                                                                  batch_size=self.batch_size)
+        images_tensor, labels_tensor, s_t, i_t = self.data.create_input_tensors_for_dataset(data_type='test',
+                                                                                            batch_size=self.batch_size)
         # Attach names to the tensors.
         images_tensor = tf.identity(images_tensor, name='images_input_op')
         labels_tensor = tf.identity(labels_tensor, name='labels_input_op')
-        return images_tensor, labels_tensor
+        return images_tensor, labels_tensor, s_t, i_t
 
     def run(self):
         """

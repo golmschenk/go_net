@@ -29,6 +29,7 @@ class Data:
 
         self.images = None
         self.labels = None
+        self.orientation = None
 
         # Internal attributes.
         self.dataset_type = None
@@ -134,13 +135,15 @@ class Data:
         :param data_type: The dataset type being used in.
         :type data_type: str
         :return: The read file data including the image data and label data.
-        :rtype: (tf.Tensor, tf.Tensor)
+        :rtype: (tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor)
         """
         go_tfrecords_reader = TFRecordsReader(file_name_queue, data_type=data_type)
         image = tf.cast(go_tfrecords_reader.image, tf.float32)
         label = go_tfrecords_reader.label
+        slope = go_tfrecords_reader.slope
+        intercept = go_tfrecords_reader.intercept
 
-        return image, label
+        return image, label, slope, intercept
 
     def preaugmentation_preprocess(self, image, label):
         """
@@ -236,26 +239,27 @@ class Data:
         :param batch_size: The size of the batches
         :type batch_size: int
         :return: The images and depths inputs.
-        :rtype: (tf.Tensor, tf.Tensor)
+        :rtype: (tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor)
         """
         file_name_queue = self.file_name_queue_for_dataset_directory(data_type)
-        image, label = self.read_and_decode_single_example_from_tfrecords(file_name_queue, data_type=data_type)
+        image, label, slope, intercept = self.read_and_decode_single_example_from_tfrecords(file_name_queue,
+                                                                                            data_type=data_type)
         image, label = self.preaugmentation_preprocess(image, label)
         if data_type == 'train':
             image, label = self.augment(image, label)
         image, label = self.postaugmentation_preprocess(image, label)
 
         if data_type in ['test', 'deploy']:
-            images, labels = tf.train.batch(
-                [image, label], batch_size=batch_size, num_threads=1, capacity=1000 + 3 * batch_size
+            images, labels, slopes, intercepts = tf.train.batch(
+                [image, label, slope, intercept], batch_size=batch_size, num_threads=1, capacity=1000 + 3 * batch_size
             )
         else:
-            images, labels = tf.train.shuffle_batch(
-                [image, label], batch_size=batch_size, num_threads=2,
+            images, labels, slopes, intercepts = tf.train.shuffle_batch(
+                [image, label, slope, intercept], batch_size=batch_size, num_threads=2,
                 capacity=1000 + 3 * batch_size, min_after_dequeue=1000
             )
 
-        return images, labels
+        return images, labels, slopes, intercepts
 
     def file_name_queue_for_dataset_directory(self, data_type):
         """
@@ -373,6 +377,10 @@ class Data:
                     'label_depth': _int64_feature(label_depth),
                     'label_raw': _bytes_feature(label_raw)
                 })
+            features.update({
+                'slope': _float_feature(self.orientation[0]),
+                'intercept': _float_feature(self.orientation[1]),
+            })
             example = tf.train.Example(features=tf.train.Features(feature=features))
             writer.write(example.SerializeToString())
 
@@ -449,6 +457,10 @@ class Data:
 
 def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _float_feature(value):
+    return tf.train.Feature(int64_list=tf.train.FloatList(value=[value]))
 
 
 def _bytes_feature(value):
