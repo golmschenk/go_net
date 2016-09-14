@@ -191,7 +191,10 @@ class Converter:
         self.stack_numpy_directory(input_directory, output_name + '_labels.npy', substring='density')
 
 
-if __name__ == '__main__':
+def command_line_interface():
+    """
+    A command line interface for the converter code.
+    """
     parser = argparse.ArgumentParser(
         description='A data converter for various purposes.'
     )
@@ -212,3 +215,7 @@ if __name__ == '__main__':
     converter = Converter()
     if args.command == nt_to_standard_title:
         converter.nt_to_standard(args.input_directory, args.output_directory)
+
+
+if __name__ == '__main__':
+    command_line_interface()

@@ -11,4 +11,8 @@ setup(
     url='https://github.com/golmschenk/go_net',
     license='MIT',
     packages=['gonet'],
+    entry_points='''
+        [console_scripts]
+        goconverter=gonet.converter:command_line_interface
+    ''',
 )
