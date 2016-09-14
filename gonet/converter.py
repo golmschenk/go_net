@@ -1,6 +1,7 @@
 """
 Code for simple conversions between file types.
 """
+import argparse
 import os
 import shlex
 import shutil
@@ -185,6 +186,29 @@ class Converter:
         if not output_directory:
             output_directory = os.getcwd()
         dataset_name = os.path.basename(os.path.normpath(input_directory))
-        output_name = output_directory + dataset_name
+        output_name = os.path.join(output_directory, dataset_name)
         self.stack_numpy_directory(input_directory, output_name + '_images.npy', substring='image')
         self.stack_numpy_directory(input_directory, output_name + '_labels.npy', substring='density')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='A data converter for various purposes.'
+    )
+    # Subparsers.
+    subparsers = parser.add_subparsers()
+    subparsers.required = True
+    subparsers.dest = 'command'
+
+    # Video load subparser specific arguments.
+    nt_to_standard_title = 'nt2standard'
+    nt_to_standard_parser = subparsers.add_parser(nt_to_standard_title, help='Converts from nt to standard format.')
+    nt_to_standard_parser.add_argument('-i', '--input_directory', type=str, help='The directory to convert.')
+    nt_to_standard_parser.add_argument('-o', '--output_directory', type=str, help='The directory to output to.')
+    nt_to_standard_parser.set_defaults(command=nt_to_standard_title)
+
+    args = parser.parse_args()
+
+    converter = Converter()
+    if args.command == nt_to_standard_title:
+        converter.nt_to_standard(args.input_directory, args.output_directory)
