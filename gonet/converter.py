@@ -169,3 +169,22 @@ class Converter:
         images = np.stack(images)
         np.save(output_numpy_path, images)
 
+    def nt_to_standard(self, input_directory=None, output_directory=None):
+        """
+        Convert from nt format to the standard GoNet input format. nt format being single numpy files, each containing
+        one image, and single label files with matching names. Each image has the string "image" in the name and each
+        label has the word "density" in the name.
+
+        :param input_directory: The directory to work on. Defaults to the current directory.
+        :type input_directory: str
+        :param output_directory: The directory to output to. Defaults to the current directory.
+        :type output_directory: str
+        """
+        if not input_directory:
+            input_directory = os.getcwd()
+        if not output_directory:
+            output_directory = os.getcwd()
+        dataset_name = os.path.basename(os.path.normpath(input_directory))
+        output_name = output_directory + dataset_name
+        self.stack_numpy_directory(input_directory, output_name + '_images.npy', substring='image')
+        self.stack_numpy_directory(input_directory, output_name + '_labels.npy', substring='density')
