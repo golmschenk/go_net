@@ -68,7 +68,7 @@ def leaky_relu(x):
     return tf.maximum(tf.mul(leaky_relu_leakiness, x), x)
 
 
-def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, conv_width=3, strides=(1, 2, 2, 1),
+def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, conv_width=3, strides=(1, 1, 1, 1),
                histogram_summary=False):
     """
     Adds a convolutional layer with all the toppings.
