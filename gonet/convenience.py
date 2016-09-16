@@ -47,7 +47,7 @@ def conv2d(images, weights, strides=None):
     :param weights: The weight variable to be applied.
     :type weights: tf.Variable
     :param strides: The strides to perform the convolution on.
-    :type strides: list[int]
+    :type strides: (int, int, int, int)
     :return: The convolutional operation.
     :rtype: tf.Tensor
     """
@@ -66,6 +66,39 @@ def leaky_relu(x):
     :rtype: tf.Tensor
     """
     return tf.maximum(tf.mul(leaky_relu_leakiness, x), x)
+
+
+def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, conv_width=3, strides=(1, 2, 2, 1),
+               histogram_summary=False):
+    """
+    Adds a convolutional layer with all the toppings.
+
+    :param scope_name: The name of the scope.
+    :type scope_name: str
+    :param input_tensor: The tensor input to the layer.
+    :type input_tensor: tf.Tensor
+    :param depth_in: The input depth.
+    :type depth_in: int
+    :param depth_out: The output_tensor depth.
+    :type depth_out: int
+    :param conv_height: The height of the convolutions.
+    :type conv_height: int
+    :param conv_width: The width of the convolutions.
+    :type conv_width: int
+    :param strides: The striding of the convolutions. Defaults to all 1.
+    :type strides: (int, int, int, int)
+    :param histogram_summary: Whether or not to show histogram summaries in Tensorboard. Defaults to False.
+    :type histogram_summary: bool
+    :return: The output/activation tensor.
+    :rtype: tf.Tensor
+    """
+    with tf.name_scope(scope_name):
+        weights = weight_variable([conv_height, conv_width, depth_in, depth_out])
+        biases = bias_variable([depth_out])
+        output_tensor = leaky_relu(conv2d(input_tensor, weights, strides=strides) + biases)
+        if histogram_summary:
+            tf.histogram_summary(scope_name + '_weights', weights)
+            tf.histogram_summary(scope_name + '_activations', output_tensor)
 
 
 def size_from_stride_two(size, iterations=1):
