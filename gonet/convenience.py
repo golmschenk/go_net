@@ -99,6 +99,7 @@ def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, con
         if histogram_summary:
             tf.histogram_summary(scope_name + '_weights', weights)
             tf.histogram_summary(scope_name + '_activations', output_tensor)
+        return output_tensor
 
 
 def size_from_stride_two(size, iterations=1):
