@@ -61,6 +61,9 @@ class Net(multiprocessing.Process):
             self.learning_rate_tensor: self.initial_learning_rate
         }
 
+    def additional_summary(self):
+        pass
+
     def train(self):
         """
         Adds the training operations and runs the training loop.
@@ -80,9 +83,12 @@ class Net(multiprocessing.Process):
         # Add the loss operations to the graph.
         with tf.name_scope('loss'):
             loss_tensor = self.create_loss_tensor(predicted_labels_tensor, labels_tensor)
+            self.loss_tensor = loss_tensor
             reduce_mean_loss_tensor = tf.reduce_mean(loss_tensor)
             tf.scalar_summary(self.step_summary_name, reduce_mean_loss_tensor)
             self.create_running_average_summary(reduce_mean_loss_tensor, summary_name=self.step_summary_name)
+
+        self.additional_summary()
 
         if self.image_summary_on:
             with tf.name_scope('comparison_summary'):
