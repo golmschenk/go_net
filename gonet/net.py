@@ -8,10 +8,12 @@ import time
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.layers import convolution2d
+
 from gonet.data import Data
 from gonet.interface import Interface
 
-from gonet.convenience import weight_variable, bias_variable
+from gonet.convenience import weight_variable, bias_variable, conv_layer, leaky_relu
 
 
 class Net(multiprocessing.Process):
@@ -173,7 +175,22 @@ class Net(multiprocessing.Process):
         :return: The label maps tensor.
         :rtype: tf.Tensor
         """
-        return tf.identity(self.create_linear_classifier_inference_op(images), name='inference_op')
+        return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
+
+    def create_shallow_net_inference_op(self, images):
+        """
+        Performs a forward pass estimating label maps from RGB images using a (shallow) deep convolution net.
+
+        :param images: The RGB images tensor.
+        :type images: tf.Tensor
+        :return: The label maps tensor.
+        :rtype: tf.Tensor
+        """
+        h_conv = convolution2d(images, 16, [3, 3], activation_fn=leaky_relu)
+        h_conv = convolution2d(h_conv, 32, [3, 3], activation_fn=leaky_relu)
+        predicted_labels = convolution2d(h_conv, 1, [3, 3], activation_fn=leaky_relu)
+
+        return predicted_labels
 
     def create_linear_classifier_inference_op(self, images):
         """
