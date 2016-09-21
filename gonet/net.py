@@ -8,7 +8,7 @@ import time
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, batch_norm
+from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, batch_norm, dropout
 
 from gonet.data import Data
 from gonet.interface import Interface
@@ -178,7 +178,7 @@ class Net(multiprocessing.Process):
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
     def mercury_module(self, name_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
-                       batch_norm_on=True):
+                       dropout_on=False, batch_norm_on=True):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
         convolution, and a 2x2 max pooling. All have stride of 1. The outputs of each part are concatenated to form an
@@ -202,12 +202,12 @@ class Net(multiprocessing.Process):
             part2 = convolution2d(input_tensor, spatial_convolution_depth, [3, 1], activation_fn=leaky_relu)
             part3 = convolution2d(input_tensor, spatial_convolution_depth, [1, 3], activation_fn=leaky_relu)
             part4 = max_pool2d(input_tensor, kernel_size=2, stride=1, padding='SAME')
-            unnormalized_output_tensor = tf.concat(3, [part1, part2, part3, part4])
-            if not batch_norm_on:
-                return unnormalized_output_tensor
-            else:
-                output_tensor = batch_norm(unnormalized_output_tensor)
-                return output_tensor
+            output_tensor = tf.concat(3, [part1, part2, part3, part4])
+            if dropout_on:
+                output_tensor = dropout(output_tensor, self.dropout_keep_probability)
+            if batch_norm_on:
+                output_tensor = batch_norm(output_tensor)
+            return output_tensor
 
     def create_shallow_net_inference_op(self, images):
         """
