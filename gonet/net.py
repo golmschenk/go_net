@@ -219,8 +219,8 @@ class Net(multiprocessing.Process):
         :rtype: tf.Tensor
         """
         module1_output = self.mercury_module('module1', images, 3, 8)
-        module2_output = self.mercury_module('module1', module1_output, 8, 16)
-        module3_output = self.mercury_module('module1', module2_output, 16, 32)
+        module2_output = self.mercury_module('module2', module1_output, 8, 16)
+        module3_output = self.mercury_module('module3', module2_output, 16, 32)
 
         predicted_labels = convolution2d(module3_output, 1, kernel_size=1)
 
