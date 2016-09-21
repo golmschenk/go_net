@@ -8,7 +8,7 @@ import time
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d
+from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, batch_norm
 
 from gonet.data import Data
 from gonet.interface import Interface
@@ -177,8 +177,39 @@ class Net(multiprocessing.Process):
         """
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
-    @staticmethod
-    def create_shallow_net_inference_op(images):
+    def mercury_module(self, name_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
+                       batch_norm_on=True):
+        """
+        This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
+        convolution, and a 2x2 max pooling. All have stride of 1. The outputs of each part are concatenated to form an
+        output tensor. An batch norm is by default applied at the end.
+
+        :param name_scope: What to name the module scope in the graph.
+        :type name_scope: str
+        :param input_tensor: The input tensor to work on.
+        :type input_tensor: tf.Tensor
+        :param aisle_convolution_depth: The output depth of the 1x1 convolution.
+        :type aisle_convolution_depth: int
+        :param spatial_convolution_depth: The output depth of the 1x3 and 3x1 convolutions (each).
+        :type spatial_convolution_depth: int
+        :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
+        :type batch_norm_on: bool
+        :return: The output activation tensor.
+        :rtype: tf.Tensor
+        """
+        with tf.name_scope(name_scope):
+            part1 = convolution2d(input_tensor, aisle_convolution_depth, [1, 1], activation_fn=leaky_relu)
+            part2 = convolution2d(input_tensor, spatial_convolution_depth, [3, 1], activation_fn=leaky_relu)
+            part3 = convolution2d(input_tensor, spatial_convolution_depth, [1, 3], activation_fn=leaky_relu)
+            part4 = max_pool2d(input_tensor, kernel_size=2, stride=1, padding='SAME')
+            unnormalized_output_tensor = tf.concat(3, [part1, part2, part3, part4])
+            if not batch_norm_on:
+                return unnormalized_output_tensor
+            else:
+                output_tensor = batch_norm(unnormalized_output_tensor)
+                return output_tensor
+
+    def create_shallow_net_inference_op(self, images):
         """
         Performs a forward pass estimating label maps from RGB images using a (shallow) deep convolution net.
 
@@ -187,28 +218,11 @@ class Net(multiprocessing.Process):
         :return: The label maps tensor.
         :rtype: tf.Tensor
         """
-        with tf.name_scope('module1'):
-            part1 = convolution2d(images, 3, [1, 1], activation_fn=leaky_relu)
-            part2 = convolution2d(images, 8, [3, 1], activation_fn=leaky_relu)
-            part3 = convolution2d(images, 8, [1, 3], activation_fn=leaky_relu)
-            part4 = max_pool2d(images, kernel_size=2, stride=1, padding='SAME')
-            output1 = tf.concat(3, [part1, part2, part3, part4])
+        module1_output = self.mercury_module('module1', images, 3, 8)
+        module2_output = self.mercury_module('module1', module1_output, 8, 16)
+        module3_output = self.mercury_module('module1', module2_output, 16, 32)
 
-        with tf.name_scope('module2'):
-            part1 = convolution2d(output1, 8, [1, 1], activation_fn=leaky_relu)
-            part2 = convolution2d(output1, 16, [3, 1], activation_fn=leaky_relu)
-            part3 = convolution2d(output1, 16, [1, 3], activation_fn=leaky_relu)
-            part4 = max_pool2d(output1, kernel_size=2, stride=1, padding='SAME')
-            output2 = tf.concat(3, [part1, part2, part3, part4])
-
-        with tf.name_scope('module3'):
-            part1 = convolution2d(output2, 16, [1, 1], activation_fn=leaky_relu)
-            part2 = convolution2d(output2, 32, [3, 1], activation_fn=leaky_relu)
-            part3 = convolution2d(output2, 32, [1, 3], activation_fn=leaky_relu)
-            part4 = max_pool2d(images, kernel_size=2, stride=1, padding='SAME')
-            output3 = tf.concat(3, [part1, part2, part3, part4])
-
-        predicted_labels = convolution2d(output3, 1, kernel_size=1)
+        predicted_labels = convolution2d(module3_output, 1, kernel_size=1)
 
         summarize_weights()
 
@@ -553,6 +567,7 @@ class Net(multiprocessing.Process):
         if not latest_model_name:
             return
         return os.path.join('models', latest_model_name)
+
 
 if __name__ == '__main__':
     interface = Interface(network_class=Net)
