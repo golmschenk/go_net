@@ -8,12 +8,12 @@ import time
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import convolution2d
+from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d
 
 from gonet.data import Data
 from gonet.interface import Interface
 
-from gonet.convenience import weight_variable, bias_variable, conv_layer, leaky_relu
+from gonet.convenience import weight_variable, bias_variable, leaky_relu
 
 
 class Net(multiprocessing.Process):
@@ -177,7 +177,8 @@ class Net(multiprocessing.Process):
         """
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
-    def create_shallow_net_inference_op(self, images):
+    @staticmethod
+    def create_shallow_net_inference_op(images):
         """
         Performs a forward pass estimating label maps from RGB images using a (shallow) deep convolution net.
 
@@ -186,9 +187,30 @@ class Net(multiprocessing.Process):
         :return: The label maps tensor.
         :rtype: tf.Tensor
         """
-        h_conv = convolution2d(images, 16, [3, 3], activation_fn=leaky_relu)
-        h_conv = convolution2d(h_conv, 32, [3, 3], activation_fn=leaky_relu)
-        predicted_labels = convolution2d(h_conv, 1, [3, 3], activation_fn=leaky_relu)
+        with tf.name_scope('module1'):
+            part1 = convolution2d(images, 3, [1, 1], activation_fn=leaky_relu)
+            part2 = convolution2d(images, 8, [3, 1], activation_fn=leaky_relu)
+            part3 = convolution2d(images, 8, [1, 3], activation_fn=leaky_relu)
+            part4 = max_pool2d(images, kernel_size=2, stride=1, padding='SAME')
+            output1 = tf.concat(3, [part1, part2, part3, part4])
+
+        with tf.name_scope('module2'):
+            part1 = convolution2d(output1, 8, [1, 1], activation_fn=leaky_relu)
+            part2 = convolution2d(output1, 16, [3, 1], activation_fn=leaky_relu)
+            part3 = convolution2d(output1, 16, [1, 3], activation_fn=leaky_relu)
+            part4 = max_pool2d(output1, kernel_size=2, stride=1, padding='SAME')
+            output2 = tf.concat(3, [part1, part2, part3, part4])
+
+        with tf.name_scope('module3'):
+            part1 = convolution2d(output2, 16, [1, 1], activation_fn=leaky_relu)
+            part2 = convolution2d(output2, 32, [3, 1], activation_fn=leaky_relu)
+            part3 = convolution2d(output2, 32, [1, 3], activation_fn=leaky_relu)
+            part4 = max_pool2d(images, kernel_size=2, stride=1, padding='SAME')
+            output3 = tf.concat(3, [part1, part2, part3, part4])
+
+        predicted_labels = convolution2d(output3, 1, kernel_size=1)
+
+        summarize_weights()
 
         return predicted_labels
 

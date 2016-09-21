@@ -14,5 +14,5 @@ setup(
     entry_points='''
         [console_scripts]
         goconverter=gonet.converter:command_line_interface
-    ''',
+    ''', install_requires=['tensorflow']
 )
