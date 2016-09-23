@@ -68,7 +68,8 @@ class Net(multiprocessing.Process):
         Adds the training operations and runs the training loop.
         """
         # Prepare session.
-        self.session = tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+        self.session = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
         print('Preparing data...')
         # Setup the inputs.
