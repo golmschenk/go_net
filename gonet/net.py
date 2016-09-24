@@ -92,7 +92,7 @@ class Net(multiprocessing.Process):
 
         # Prepare the summary operations.
         summaries_op = tf.merge_all_summaries()
-        summary_path = os.path.join(self.log_directory,
+        summary_path = os.path.join(self.log_directory, self.network_name + ' ' +
                                     datetime.datetime.now().strftime("y%Y_m%m_d%d_h%H_m%M_s%S"))
         train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
         validation_writer = tf.train.SummaryWriter(summary_path + '_validation', self.session.graph)
