@@ -5,6 +5,7 @@ import datetime
 import multiprocessing
 import os
 import time
+from zipfile import ZipFile
 
 import numpy as np
 import tensorflow as tf
@@ -94,6 +95,7 @@ class Net(multiprocessing.Process):
         summaries_op = tf.merge_all_summaries()
         summary_path = os.path.join(self.log_directory, self.network_name + ' ' +
                                     datetime.datetime.now().strftime("y%Y_m%m_d%d_h%H_m%M_s%S"))
+        self.log_source_files(summary_path + '_source')
         train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
         validation_writer = tf.train.SummaryWriter(summary_path + '_validation', self.session.graph)
 
@@ -570,6 +572,21 @@ class Net(multiprocessing.Process):
         if not latest_model_name:
             return
         return os.path.join('models', latest_model_name)
+
+    def log_source_files(self, output_file_name):
+        """
+        Takes all the Python and txt files in the working directory and compresses them into a zip file.
+
+        :param output_file_name: The name of the output file.
+        :type output_file_name: str
+        """
+        file_names_to_zip = []
+        for file_name in os.listdir('.'):
+            if file_name.endswith(".py") or file_name.endswith('.txt'):
+                file_names_to_zip.append(file_name)
+        with ZipFile(output_file_name + '.zip', 'w') as zip_file:
+            for file_name in file_names_to_zip:
+                zip_file.write(file_name)
 
 
 if __name__ == '__main__':
