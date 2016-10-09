@@ -336,13 +336,10 @@ class Net(multiprocessing.Process):
         :param label_differences: The tensor containing the difference between the actual and predicted labels.
         :type label_differences: tf.Tensor
         """
-        label_heat_map = self.convert_to_heat_map_rgb(labels)
-        predicted_label_heat_map = self.convert_to_heat_map_rgb(predicted_labels)
-        label_difference_heat_map = self.convert_to_heat_map_rgb(label_differences)
+        concatenated_labels = tf.concat(1, [labels, predicted_labels, label_differences])
+        concatenated_heat_maps = self.convert_to_heat_map_rgb(concatenated_labels)
         display_images = tf.div(images, tf.reduce_max(tf.abs(images)))
-
-        comparison_image = tf.concat(1, [display_images, label_heat_map, predicted_label_heat_map,
-                                         label_difference_heat_map])
+        comparison_image = tf.concat(1, [display_images, concatenated_heat_maps])
         tf.image_summary('comparison', comparison_image)
 
     def interface_handler(self):
