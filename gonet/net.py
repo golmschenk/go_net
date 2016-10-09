@@ -183,8 +183,8 @@ class Net(multiprocessing.Process):
                        max_pool_depth, dropout_on=False, batch_norm_on=True):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
-        convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are concatenated to form an
-        output tensor. An batch norm is by default applied at the end.
+        convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are
+        concatenated to form an output tensor. An batch norm is by default applied at the end.
 
         :param name_scope: What to name the module scope in the graph.
         :type name_scope: str
@@ -314,8 +314,8 @@ class Net(multiprocessing.Process):
         :return: The heat map image tensor.
         :rtype: tf.Tensor
         """
-        maximum = tf.reduce_max(tensor)
-        minimum = tf.reduce_min(tensor)
+        maximum = tf.reduce_max(tensor, reduction_indices=[1, 2, 3], keep_dims=True)
+        minimum = tf.reduce_min(tensor, reduction_indices=[1, 2, 3], keep_dims=True)
         ratio = 2 * (tensor - minimum) / (maximum - minimum)
         b = tf.maximum(0.0, (1 - ratio))
         r = tf.maximum(0.0, (ratio - 1))
