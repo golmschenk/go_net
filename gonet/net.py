@@ -481,7 +481,7 @@ class Net(multiprocessing.Process):
         self.create_inference_op(images_tensor)
 
         # The op for initializing the variables.
-        initialize_op = tf.initialize_all_variables()
+        initialize_op = tf.group(tf.initialize_all_variables(), tf.initialize_local_variables())
 
         # Prepare the saver.
         variables_to_restore = [v for v in tf.all_variables() if "input_producer/limit_epochs/epochs" not in v.name]
