@@ -196,6 +196,8 @@ class Net(multiprocessing.Process):
         :type spatial_convolution_depth: int
         :param max_pool_depth: The output depth of the (dimensional shifted) max pool.
         :type max_pool_depth: int
+        :param dropout_on: A boolean to choose whether or not dropout should be applied.
+        :type dropout_on: bool
         :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
         :type batch_norm_on: bool
         :return: The output activation tensor.
@@ -208,6 +210,35 @@ class Net(multiprocessing.Process):
             max_pool_output = max_pool2d(input_tensor, kernel_size=2, stride=1, padding='SAME')
             part4 = convolution2d(max_pool_output, max_pool_depth, [1, 1], activation_fn=leaky_relu)
             output_tensor = tf.concat(3, [part1, part2, part3, part4])
+            if dropout_on:
+                output_tensor = dropout(output_tensor, self.dropout_keep_probability)
+            if batch_norm_on:
+                output_tensor = batch_norm(output_tensor)
+            return output_tensor
+
+    def terra_module(self, name_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
+                     batch_norm_on=True):
+        """
+        A basic square 2D convolution layer followed by optional batch norm and dropout.
+
+        :param name_scope: What to name the module scope in the graph.
+        :type name_scope: str
+        :param input_tensor: The input tensor to work on.
+        :type input_tensor: tf.Tensor
+        :param convolution_output_depth: The output depth of the convolution.
+        :type convolution_output_depth: int
+        :param kernel_size: The size of the square convolutional kernel.
+        :type kernel_size: int
+        :param dropout_on: A boolean to choose whether or not dropout should be applied.
+        :type dropout_on: bool
+        :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
+        :type batch_norm_on: bool
+        :return: The output activation tensor.
+        :rtype: tf.Tensor
+        """
+        with tf.name_scope(name_scope):
+            output_tensor = convolution2d(input_tensor, convolution_output_depth, [kernel_size, kernel_size],
+                                          activation_fn=leaky_relu)
             if dropout_on:
                 output_tensor = dropout(output_tensor, self.dropout_keep_probability)
             if batch_norm_on:
