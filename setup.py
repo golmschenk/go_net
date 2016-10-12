@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='gonet',
-    version='0.1.1',
+    version='0.1.2',
     description='The Go Net.',
     url='https://github.com/golmschenk/go_net',
     license='MIT',
