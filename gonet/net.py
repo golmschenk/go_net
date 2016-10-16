@@ -14,7 +14,7 @@ from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool
 from gonet.data import Data
 from gonet.interface import Interface
 from gonet.convenience import weight_variable, bias_variable, leaky_relu
-from settings_reader import SettingsReader
+from settings import Settings
 
 
 class Net(multiprocessing.Process):
@@ -22,16 +22,17 @@ class Net(multiprocessing.Process):
     The class to build and interact with the Net TensorFlow graph.
     """
 
-    def __init__(self, message_queue=None):
+    def __init__(self, message_queue=None, settings=None):
         super().__init__()
-        settings = SettingsReader.attain_settings()
+        if not settings:
+            settings = Settings()
 
         # Common variables.
-        self.batch_size = 3
+        self.batch_size = settings.batch_size
         self.initial_learning_rate = settings.initial_learning_rate
         self.data = Data()
         self.dropout_keep_probability = 0.5
-        self.network_name = 'go_net'
+        self.network_name = settings.network_name
 
         # Logging.
         self.log_directory = 'logs'
