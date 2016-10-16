@@ -13,8 +13,8 @@ from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool
 
 from gonet.data import Data
 from gonet.interface import Interface
-
 from gonet.convenience import weight_variable, bias_variable, leaky_relu
+from settings_reader import SettingsReader
 
 
 class Net(multiprocessing.Process):
@@ -24,10 +24,11 @@ class Net(multiprocessing.Process):
 
     def __init__(self, message_queue=None):
         super().__init__()
+        settings = SettingsReader.attain_settings()
 
         # Common variables.
         self.batch_size = 3
-        self.initial_learning_rate = 0.00001
+        self.initial_learning_rate = settings.initial_learning_rate
         self.data = Data()
         self.dropout_keep_probability = 0.5
         self.network_name = 'go_net'
