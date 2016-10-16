@@ -87,7 +87,6 @@ class Net(multiprocessing.Process):
             loss_tensor = self.create_loss_tensor(predicted_labels_tensor, labels_tensor)
             reduce_mean_loss_tensor = tf.reduce_mean(loss_tensor)
             tf.scalar_summary(self.step_summary_name, reduce_mean_loss_tensor)
-            self.create_running_average_summary(reduce_mean_loss_tensor, summary_name=self.step_summary_name)
 
         if self.image_summary_on:
             with tf.name_scope('comparison_summary'):
@@ -448,46 +447,6 @@ class Net(multiprocessing.Process):
         images_tensor = tf.identity(images_tensor, name='images_input_op')
         labels_tensor = tf.identity(labels_tensor, name='labels_input_op')
         return images_tensor, labels_tensor
-
-    def create_running_average_summary(self, tensor, summary_name=None):
-        """
-        Create a running average summary of a scalar tensor.
-
-        :param tensor: The scalar tensor to create the running average summary for.
-        :type tensor: tf.Tensor
-        :param summary_name: The name to display for the summary in TensorBoard prepended by "Running average".
-                             Defaults to the tensor name.
-        :type summary_name: str
-        """
-        if not summary_name:
-            summary_name = tensor.name
-        train_running_average_tensor = tf.Variable(initial_value=-1.0)
-        validation_running_average_tensor = tf.Variable(initial_value=-1.0)
-
-        def train_update():
-            """The inner averaging for the training steps."""
-            inner_running_average_op = tf.cond(
-                tf.equal(train_running_average_tensor, -1.0),
-                lambda: tf.assign(train_running_average_tensor, tensor),
-                lambda: tf.assign(train_running_average_tensor,
-                                  tf.mul(tensor, self.moving_average_decay) +
-                                  tf.mul(train_running_average_tensor, 1.0 - self.moving_average_decay))
-            )
-            return inner_running_average_op
-
-        def validation_update():
-            """The inner averaging for the validation steps."""
-            return tf.assign(validation_running_average_tensor, tensor)
-
-        running_average_op = tf.cond(tf.equal(self.dataset_selector_tensor, 'validation'),
-                                     validation_update,
-                                     train_update)
-        running_average_tensor = tf.cond(tf.equal(self.dataset_selector_tensor, 'validation'),
-                                         lambda: validation_running_average_tensor,
-                                         lambda: train_running_average_tensor)
-        with tf.control_dependencies([running_average_op]):
-            tf.scalar_summary('Running average %s' % summary_name.lower(),
-                              running_average_tensor)
 
     def run(self):
         """
