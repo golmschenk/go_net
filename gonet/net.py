@@ -14,7 +14,7 @@ from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool
 from gonet.data import Data
 from gonet.interface import Interface
 from gonet.convenience import weight_variable, bias_variable, leaky_relu
-from settings import Settings
+from gonet.settings import Settings
 
 
 class Net(multiprocessing.Process):
