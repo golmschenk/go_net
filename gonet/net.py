@@ -46,7 +46,7 @@ class Net(multiprocessing.Process):
         self.moving_average_loss = None
         self.moving_average_decay = 0.1
         self.stop_signal = False
-        self.step = 0
+        self.global_step = tf.Variable(0, name='global_step', trainable=False)
         self.saver = None
         self.session = None
         self.dataset_selector_tensor = tf.placeholder(dtype=tf.string)
@@ -54,6 +54,7 @@ class Net(multiprocessing.Process):
         self.learning_rate_tensor = tf.placeholder(tf.float32)
         self.queue = message_queue
         self.predicted_test_labels = None
+        self.train_step = 0
 
         os.nice(10)
 
@@ -127,19 +128,20 @@ class Net(multiprocessing.Process):
             while not coordinator.should_stop() and not self.stop_signal:
                 # Regular training step.
                 start_time = time.time()
-                _, loss, summaries = self.session.run(
-                    [training_op, reduce_mean_loss_tensor, summaries_op],
+                _, loss, summaries, step = self.session.run(
+                    [training_op, reduce_mean_loss_tensor, summaries_op, self.global_step],
                     feed_dict=self.default_feed_dictionary
                 )
                 duration = time.time() - start_time
 
                 # Information print and summary write step.
-                if self.step % self.summary_step_period == 0:
-                    train_writer.add_summary(summaries, self.step)
-                    print('Step %d: %s = %.5f (%.3f sec / step)' % (self.step, self.step_summary_name, loss, duration))
+                if step % self.summary_step_period == 0:
+                    train_writer.add_summary(summaries, step)
+                    print('Step %d: %s = %.5f (%.3f sec / step)' % (
+                    step, self.step_summary_name, loss, duration))
 
                 # Validation step.
-                if self.step % self.validation_step_period == 0:
+                if step % self.validation_step_period == 0:
                     start_time = time.time()
                     loss, summaries = self.session.run(
                         [reduce_mean_loss_tensor, summaries_op],
@@ -148,16 +150,14 @@ class Net(multiprocessing.Process):
                                    self.dataset_selector_tensor: 'validation'}
                     )
                     duration = time.time() - start_time
-                    validation_writer.add_summary(summaries, self.step)
-                    print('Validation step %d: %s = %.5g (%.3f sec / step)' % (self.step, self.step_summary_name,
+                    validation_writer.add_summary(summaries, step)
+                    print('Validation step %d: %s = %.5g (%.3f sec / step)' % (step, self.step_summary_name,
                                                                                loss, duration))
-
-                self.step += 1
 
                 # Handle interface messages from the user.
                 self.interface_handler()
         except tf.errors.OutOfRangeError as error:
-            if self.step == 0:
+            if self.global_step == 0:
                 print('Data not found.')
             else:
                 raise error
@@ -334,7 +334,8 @@ class Net(multiprocessing.Process):
         :return: The training op.
         :rtype: tf.Operation
         """
-        return tf.train.AdamOptimizer(self.initial_learning_rate).minimize(value_to_minimize)
+        return tf.train.AdamOptimizer(self.initial_learning_rate).minimize(value_to_minimize,
+                                                                           global_step=self.global_step)
 
     @staticmethod
     def convert_to_heat_map_rgb(tensor):
@@ -383,7 +384,7 @@ class Net(multiprocessing.Process):
                 message = self.queue.get(block=False)
                 if message == 'save':
                     save_path = self.saver.save(self.session, os.path.join('models', self.network_name + '.ckpt'),
-                                                global_step=self.step)
+                                                global_step=self.global_step)
                     tf.train.write_graph(self.session.graph_def, 'models', self.network_name + '.pb')
                     print('Model saved in file: %s' % save_path)
                 elif message == 'quit':
@@ -500,12 +501,12 @@ class Net(multiprocessing.Process):
         try:
             while not coordinator.should_stop() and not self.stop_signal:
                 self.test_run_loop_step()
-                self.step += 1
+                self.train_step += 1
         except tf.errors.OutOfRangeError:
-            if self.step == 0:
+            if self.train_step == 0:
                 print('Data not found.')
             else:
-                print('Done predicting after %d steps.' % self.step)
+                print('Done predicting after %d steps.' % self.train_step)
         finally:
             # When done, ask the threads to stop.
             coordinator.request_stop()
@@ -532,7 +533,7 @@ class Net(multiprocessing.Process):
             feed_dict={**self.default_feed_dictionary, self.dropout_keep_probability_tensor: 1.0}
         )
         self.predicted_test_labels = np.concatenate((self.predicted_test_labels, predicted_labels_batch))
-        print('{image_count} images processed.'.format(image_count=(self.step + 1) * self.batch_size))
+        print('{image_count} images processed.'.format(image_count=(self.train_step + 1) * self.batch_size))
 
     def test_run_postloop(self):
         """
