@@ -29,7 +29,6 @@ class Net(multiprocessing.Process):
 
         # Common variables.
         self.batch_size = settings.batch_size
-        self.initial_learning_rate = settings.initial_learning_rate
         self.data = Data()
         self.dropout_keep_probability = 0.5
         self.network_name = settings.network_name
@@ -51,7 +50,10 @@ class Net(multiprocessing.Process):
         self.session = None
         self.dataset_selector_tensor = tf.placeholder(dtype=tf.string)
         self.dropout_keep_probability_tensor = tf.placeholder(tf.float32)
-        self.learning_rate_tensor = tf.placeholder(tf.float32)
+        self.learning_rate_tensor = tf.train.exponential_decay(settings.initial_learning_rate,
+                                                               self.global_step,
+                                                               settings.learning_rate_decay_steps,
+                                                               settings.learning_rate_decay_rate)
         self.queue = message_queue
         self.predicted_test_labels = None
         self.train_step = 0
@@ -64,7 +66,6 @@ class Net(multiprocessing.Process):
         return {
             self.dropout_keep_probability_tensor: self.dropout_keep_probability,
             self.dataset_selector_tensor: 'train',
-            self.learning_rate_tensor: self.initial_learning_rate
         }
 
     def train(self):
@@ -93,6 +94,9 @@ class Net(multiprocessing.Process):
             with tf.name_scope('comparison_summary'):
                 self.image_comparison_summary(images_tensor, labels_tensor, predicted_labels_tensor, loss_tensor)
 
+        # Add the training operations to the graph.
+        training_op = self.create_training_op(value_to_minimize=reduce_mean_loss_tensor)
+
         # Prepare the summary operations.
         summaries_op = tf.merge_all_summaries()
         summary_path = os.path.join(self.log_directory, self.network_name + ' ' +
@@ -100,9 +104,6 @@ class Net(multiprocessing.Process):
         self.log_source_files(summary_path + '_source')
         train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
         validation_writer = tf.train.SummaryWriter(summary_path + '_validation', self.session.graph)
-
-        # Add the training operations to the graph.
-        training_op = self.create_training_op(value_to_minimize=reduce_mean_loss_tensor)
 
         # The op for initializing the variables.
         initialize_op = tf.initialize_all_variables()
@@ -138,7 +139,7 @@ class Net(multiprocessing.Process):
                 if step % self.summary_step_period == 0:
                     train_writer.add_summary(summaries, step)
                     print('Step %d: %s = %.5f (%.3f sec / step)' % (
-                    step, self.step_summary_name, loss, duration))
+                        step, self.step_summary_name, loss, duration))
 
                 # Validation step.
                 if step % self.validation_step_period == 0:
@@ -334,8 +335,9 @@ class Net(multiprocessing.Process):
         :return: The training op.
         :rtype: tf.Operation
         """
-        return tf.train.AdamOptimizer(self.initial_learning_rate).minimize(value_to_minimize,
-                                                                           global_step=self.global_step)
+        tf.scalar_summary('Learning rate', self.learning_rate_tensor)
+        return tf.train.AdamOptimizer(self.learning_rate_tensor).minimize(value_to_minimize,
+                                                                          global_step=self.global_step)
 
     @staticmethod
     def convert_to_heat_map_rgb(tensor):
@@ -389,10 +391,6 @@ class Net(multiprocessing.Process):
                     print('Model saved in file: %s' % save_path)
                 elif message == 'quit':
                     self.stop_signal = True
-                elif message.startswith('change learning rate'):
-                    message = self.queue.get()
-                    self.initial_learning_rate = float(message)
-                    print('New learning rate is %f.' % self.initial_learning_rate)
 
     def create_feed_selectable_input_tensors(self, dataset_dictionary):
         """

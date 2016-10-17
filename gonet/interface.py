@@ -55,10 +55,6 @@ class Interface:
                 self.queue.put('quit')
                 self.network.join()
                 break
-            elif user_input.startswith('l '):
-                print('Updating learning rate.')
-                self.queue.put('change learning rate')
-                self.queue.put(user_input[2:])
 
     def test(self):
         """
