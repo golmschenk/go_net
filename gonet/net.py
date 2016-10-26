@@ -24,14 +24,14 @@ class Net(multiprocessing.Process):
 
     def __init__(self, message_queue=None, settings=None):
         super().__init__()
-        if not settings:
-            settings = Settings()
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = Settings()
 
         # Common variables.
-        self.batch_size = settings.batch_size
         self.data = Data()
         self.dropout_keep_probability = 0.5
-        self.network_name = settings.network_name
 
         # Logging.
         self.log_directory = 'logs'
@@ -50,10 +50,10 @@ class Net(multiprocessing.Process):
         self.session = None
         self.dataset_selector_tensor = tf.placeholder(dtype=tf.string)
         self.dropout_keep_probability_tensor = tf.placeholder(tf.float32)
-        self.learning_rate_tensor = tf.train.exponential_decay(settings.initial_learning_rate,
+        self.learning_rate_tensor = tf.train.exponential_decay(self.settings.initial_learning_rate,
                                                                self.global_step,
-                                                               settings.learning_rate_decay_steps,
-                                                               settings.learning_rate_decay_rate)
+                                                               self.settings.learning_rate_decay_steps,
+                                                               self.settings.learning_rate_decay_rate)
         self.queue = message_queue
         self.predicted_test_labels = None
         self.train_step = 0
@@ -99,7 +99,7 @@ class Net(multiprocessing.Process):
 
         # Prepare the summary operations.
         summaries_op = tf.merge_all_summaries()
-        summary_path = os.path.join(self.log_directory, self.network_name + ' ' +
+        summary_path = os.path.join(self.log_directory, self.settings.network_name + ' ' +
                                     datetime.datetime.now().strftime("y%Y_m%m_d%d_h%H_m%M_s%S"))
         self.log_source_files(summary_path + '_source')
         train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
@@ -385,9 +385,10 @@ class Net(multiprocessing.Process):
             if not self.queue.empty():
                 message = self.queue.get(block=False)
                 if message == 'save':
-                    save_path = self.saver.save(self.session, os.path.join('models', self.network_name + '.ckpt'),
+                    save_path = self.saver.save(self.session,
+                                                os.path.join('models', self.settings.network_name + '.ckpt'),
                                                 global_step=self.global_step)
-                    tf.train.write_graph(self.session.graph_def, 'models', self.network_name + '.pb')
+                    tf.train.write_graph(self.session.graph_def, 'models', self.settings.network_name + '.pb')
                     print('Model saved in file: %s' % save_path)
                 elif message == 'quit':
                     self.stop_signal = True
@@ -419,11 +420,11 @@ class Net(multiprocessing.Process):
         """
         training_images_tensor, training_labels_tensor = self.data.create_input_tensors_for_dataset(
             data_type='train',
-            batch_size=self.batch_size
+            batch_size=self.settings.batch_size
         )
         validation_images_tensor, validation_labels_tensor = self.data.create_input_tensors_for_dataset(
             data_type='validation',
-            batch_size=self.batch_size
+            batch_size=self.settings.batch_size
         )
         images_tensor, labels_tensor = self.create_feed_selectable_input_tensors(
             {
@@ -441,7 +442,7 @@ class Net(multiprocessing.Process):
         :rtype: tf.Tensor, tf.Tensor
         """
         images_tensor, labels_tensor = self.data.create_input_tensors_for_dataset(data_type='test',
-                                                                                  batch_size=self.batch_size)
+                                                                                  batch_size=self.settings.batch_size)
         # Attach names to the tensors.
         images_tensor = tf.identity(images_tensor, name='images_input_op')
         labels_tensor = tf.identity(labels_tensor, name='labels_input_op')
@@ -531,7 +532,7 @@ class Net(multiprocessing.Process):
             feed_dict={**self.default_feed_dictionary, self.dropout_keep_probability_tensor: 1.0}
         )
         self.predicted_test_labels = np.concatenate((self.predicted_test_labels, predicted_labels_batch))
-        print('{image_count} images processed.'.format(image_count=(self.train_step + 1) * self.batch_size))
+        print('{image_count} images processed.'.format(image_count=(self.train_step + 1) * self.settings.batch_size))
 
     def test_run_postloop(self):
         """
@@ -551,7 +552,7 @@ class Net(multiprocessing.Process):
         latest_model_name = None
         latest_model_step = -1
         for file_name in os.listdir("models"):
-            if self.network_name + '.ckpt' in file_name and 'meta' not in file_name:
+            if self.settings.network_name + '.ckpt' in file_name and 'meta' not in file_name:
                 number_start_index = file_name.index('ckpt-') + len('ckpt-')
                 model_step = int(file_name[number_start_index:])
                 if model_step > latest_model_step:
@@ -561,7 +562,8 @@ class Net(multiprocessing.Process):
             return
         return os.path.join('models', latest_model_name)
 
-    def log_source_files(self, output_file_name):
+    @staticmethod
+    def log_source_files(output_file_name):
         """
         Takes all the Python and txt files in the working directory and compresses them into a zip file.
 
