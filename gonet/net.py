@@ -135,14 +135,17 @@ class Net(multiprocessing.Process):
                 )
                 duration = time.time() - start_time
 
-                # Information print and summary write step.
-                if step % self.summary_step_period == 0:
-                    train_writer.add_summary(summaries, step)
+                # Information print step.
+                if step % self.settings.print_step_period == 0:
                     print('Step %d: %s = %.5f (%.3f sec / step)' % (
                         step, self.step_summary_name, loss, duration))
 
+                # Summary write step.
+                if step % self.settings.summary_step_period == 0:
+                    train_writer.add_summary(summaries, step)
+
                 # Validation step.
-                if step % self.validation_step_period == 0:
+                if step % self.settings.validation_step_period == 0:
                     start_time = time.time()
                     loss, summaries = self.session.run(
                         [reduce_mean_loss_tensor, summaries_op],

@@ -16,6 +16,6 @@ class Settings:
         self.learning_rate_decay_steps = 10000
 
         # Logging
-        self.loss_print_step_peroid = 1
+        self.print_step_period = 1
         self.summary_step_period = 1
         self.validation_step_period = 10
