@@ -42,8 +42,6 @@ class Net(multiprocessing.Process):
 
         # Internal setup.
         self.restore_model = None
-        self.moving_average_loss = None
-        self.moving_average_decay = 0.1
         self.stop_signal = False
         self.global_step = tf.Variable(0, name='global_step', trainable=False)
         self.saver = None
