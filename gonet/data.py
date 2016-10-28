@@ -7,6 +7,8 @@ import os
 import h5py
 import numpy as np
 import tensorflow as tf
+
+from gonet.settings import Settings
 from gonet.tfrecords_reader import TFRecordsReader
 
 from gonet.convenience import random_boolean_tensor
@@ -17,10 +19,11 @@ class Data:
     A class for managing the TFRecord data.
     """
 
-    def __init__(self):
-        self.data_directory = 'data'
-        self.data_name = 'nyud_micro'
-        self.import_directory = 'data/import'
+    def __init__(self, settings=None):
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = Settings()
 
         # Note, these are *training* sizes. Data will be resized to this size.
         self.image_height = 464 // 8
@@ -29,6 +32,7 @@ class Data:
 
         self.images = None
         self.labels = None
+        self.data_name = None
 
         # Internal attributes.
         self.dataset_type = None
@@ -122,7 +126,7 @@ class Data:
         :return: The path to the data file.
         :rtype: str
         """
-        return os.path.join(self.data_directory, self.data_name)
+        return os.path.join(self.settings.data_directory, self.data_name)
 
     @staticmethod
     def read_and_decode_single_example_from_tfrecords(file_name_queue, data_type=None):
@@ -273,7 +277,7 @@ class Data:
             num_epochs = None
             shuffle = True
         file_paths = []
-        for file_path in glob.glob(os.path.join(self.data_directory, data_type, '*.tfrecords')):
+        for file_path in glob.glob(os.path.join(self.settings.data_directory, data_type, '*.tfrecords')):
             file_paths.append(file_path)
         file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
         return file_name_queue
@@ -354,7 +358,7 @@ class Data:
         image_width = images.shape[2]
         image_depth = images.shape[3]
 
-        filename = os.path.join(self.data_directory, self.data_name + '.tfrecords')
+        filename = os.path.join(self.settings.data_directory, self.data_name + '.tfrecords')
         print('Writing', filename)
         writer = tf.python_io.TFRecordWriter(filename)
         for index in range(number_of_examples):
@@ -413,7 +417,7 @@ class Data:
         """
         import_file_paths = self.attain_import_file_paths()
         if not import_file_paths:
-            print('No data found in %s.' % self.import_directory)
+            print('No data found in %s.' % os.path.join(self.settings.data_directory, 'import'))
         for import_file_path in import_file_paths:
             print('Converting %s...' % str(import_file_path))
             self.import_file(import_file_path)
@@ -439,7 +443,7 @@ class Data:
         :rtype: list[str]
         """
         import_file_paths = []
-        for file_directory, _, file_names in os.walk(self.import_directory):
+        for file_directory, _, file_names in os.walk(os.path.join(self.settings.data_directory, 'import')):
             mat_names = [file_name for file_name in file_names if file_name.endswith('.mat')]
             for mat_name in mat_names:
                 mat_path = os.path.abspath(os.path.join(file_directory, mat_name))

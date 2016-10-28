@@ -55,7 +55,7 @@ class TestGoData:
 
     def test_data_path_property(self):
         go_data = Data()
-        go_data.data_directory = 'directory'
+        go_data.settings.data_directory = 'directory'
         go_data.data_name = 'file_name'
 
         assert go_data.data_path == os.path.join('directory', 'file_name')

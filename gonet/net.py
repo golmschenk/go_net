@@ -34,7 +34,6 @@ class Net(multiprocessing.Process):
         self.dropout_keep_probability = 0.5
 
         # Logging.
-        self.log_directory = 'logs'
         self.summary_step_period = 1
         self.validation_step_period = 10
         self.step_summary_name = "Loss per pixel"
@@ -97,7 +96,7 @@ class Net(multiprocessing.Process):
 
         # Prepare the summary operations.
         summaries_op = tf.merge_all_summaries()
-        summary_path = os.path.join(self.log_directory, self.settings.network_name + ' ' +
+        summary_path = os.path.join(self.settings.logs_directory, self.settings.network_name + ' ' +
                                     datetime.datetime.now().strftime("y%Y_m%m_d%d_h%H_m%M_s%S"))
         self.log_source_files(summary_path + '_source')
         train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
@@ -387,9 +386,9 @@ class Net(multiprocessing.Process):
                 message = self.queue.get(block=False)
                 if message == 'save':
                     save_path = self.saver.save(self.session,
-                                                os.path.join('models', self.settings.network_name + '.ckpt'),
+                                                os.path.join(self.settings.models_directory, self.settings.network_name + '.ckpt'),
                                                 global_step=self.global_step)
-                    tf.train.write_graph(self.session.graph_def, 'models', self.settings.network_name + '.pb')
+                    tf.train.write_graph(self.session.graph_def, self.settings.models_directory, self.settings.network_name + '.pb')
                     print('Model saved in file: %s' % save_path)
                 elif message == 'quit':
                     self.stop_signal = True
@@ -539,7 +538,7 @@ class Net(multiprocessing.Process):
         """
         The code that will be run once the inference test loop is finished. Mostly for saving data or statistics.
         """
-        predicted_labels_save_path = os.path.join(self.data.data_directory, 'predicted_labels')
+        predicted_labels_save_path = os.path.join(self.settings.data_directory, 'predicted_labels')
         print('Saving labels to {}.npy...'.format(predicted_labels_save_path))
         np.save(predicted_labels_save_path, self.predicted_test_labels)
 
@@ -552,7 +551,7 @@ class Net(multiprocessing.Process):
         """
         latest_model_name = None
         latest_model_step = -1
-        for file_name in os.listdir("models"):
+        for file_name in os.listdir(self.settings.models_directory):
             if self.settings.network_name + '.ckpt' in file_name and 'meta' not in file_name:
                 number_start_index = file_name.index('ckpt-') + len('ckpt-')
                 model_step = int(file_name[number_start_index:])
@@ -561,7 +560,7 @@ class Net(multiprocessing.Process):
                     latest_model_name = file_name
         if not latest_model_name:
             return
-        return os.path.join('models', latest_model_name)
+        return os.path.join(self.settings.models_directory, latest_model_name)
 
     @staticmethod
     def log_source_files(output_file_name):
