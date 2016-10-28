@@ -27,6 +27,10 @@ class Settings:
         self.logs_directory = 'logs'
         self.models_directory = 'models'
 
+        # AWS specific overriding.
+        if self.is_aws_instance():
+            self.aws_overrides()
+
     @staticmethod
     def is_aws_instance():
         """
