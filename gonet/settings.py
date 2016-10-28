@@ -37,3 +37,11 @@ class Settings:
         """
         completed_process = subprocess.run(["which", "ec2metadata"])
         return completed_process.returncode == 0
+
+    def aws_overrides(self):
+        """
+        Updates the settings for running in a AWS instance.
+        """
+        self.data_directory = '/home/ubuntu/efs/data'
+        self.logs_directory = '/home/ubuntu/efs/logs'
+        self.models_directory = '/home/ubuntu/efs/models'
