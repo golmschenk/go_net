@@ -16,7 +16,7 @@ setup(
         goconverter=gonet.converter:command_line_interface
     ''',
     install_requires=[
-        'tensorflow',
+        #'tensorflow',
         'h5py'
     ]
 )
