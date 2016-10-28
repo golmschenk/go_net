@@ -19,8 +19,8 @@ class Settings:
 
         # Logging
         self.print_step_period = 1
-        self.summary_step_period = 1
-        self.validation_step_period = 10
+        self.summary_step_period = 100
+        self.validation_step_period = 100
 
         # Paths
         self.data_directory = 'data'
