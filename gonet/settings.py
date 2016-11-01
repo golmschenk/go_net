@@ -13,14 +13,16 @@ class Settings:
 
         # Common settings
         self.batch_size = 3
-        self.initial_learning_rate = 0.00001
-        self.learning_rate_decay_rate = 0.96
-        self.learning_rate_decay_steps = 10000
+        self.initial_learning_rate = 0.0001
+        self.learning_rate_decay_rate = 0.1
+        self.learning_rate_decay_steps = 100000
 
         # Logging
         self.print_step_period = 1
         self.summary_step_period = 100
         self.validation_step_period = 100
+        self.model_auto_save_step_period = 10000
+        self.number_of_models_to_keep = 1
 
         # Paths
         self.data_directory = 'data'

@@ -106,7 +106,7 @@ class Net(multiprocessing.Process):
         initialize_op = tf.initialize_all_variables()
 
         # Prepare saver.
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=self.settings.number_of_models_to_keep)
 
         print('Starting training...')
         # Initialize the variables.
@@ -154,6 +154,9 @@ class Net(multiprocessing.Process):
                     validation_writer.add_summary(summaries, step)
                     print('Validation step %d: %s = %.5g (%.3f sec / step)' % (step, self.step_summary_name,
                                                                                loss, duration))
+
+                if step % self.settings.model_auto_save_step_period == 0 and step != 0:
+                    self.save_model()
 
                 # Handle interface messages from the user.
                 self.interface_handler()
@@ -385,13 +388,19 @@ class Net(multiprocessing.Process):
             if not self.queue.empty():
                 message = self.queue.get(block=False)
                 if message == 'save':
-                    save_path = self.saver.save(self.session,
-                                                os.path.join(self.settings.models_directory, self.settings.network_name + '.ckpt'),
-                                                global_step=self.global_step)
-                    tf.train.write_graph(self.session.graph_def, self.settings.models_directory, self.settings.network_name + '.pb')
-                    print('Model saved in file: %s' % save_path)
+                    self.save_model()
                 elif message == 'quit':
                     self.stop_signal = True
+
+    def save_model(self):
+        """
+        Saves the current graph model.
+        """
+        save_path = self.saver.save(self.session,
+                                    os.path.join(self.settings.models_directory, self.settings.network_name + '.ckpt'),
+                                    global_step=self.global_step)
+        tf.train.write_graph(self.session.graph_def, self.settings.models_directory, self.settings.network_name + '.pb')
+        print('Model saved in file: %s' % save_path)
 
     def create_feed_selectable_input_tensors(self, dataset_dictionary):
         """
