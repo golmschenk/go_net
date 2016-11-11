@@ -128,8 +128,7 @@ class Data:
         """
         return os.path.join(self.settings.data_directory, self.data_name)
 
-    @staticmethod
-    def read_and_decode_single_example_from_tfrecords(file_name_queue, data_type=None):
+    def read_and_decode_single_example_from_tfrecords(self, file_name_queue, data_type=None):
         """
         A definition of how TF should read a single example proto from the file record.
 
@@ -142,6 +141,7 @@ class Data:
         """
         go_tfrecords_reader = TFRecordsReader(file_name_queue, data_type=data_type)
         image = tf.cast(go_tfrecords_reader.image, tf.float32)
+        self.image_depth = image.shape[3]  # TODO: I'm not convinced this is the right way to set the depth. Move it settings.
         label = go_tfrecords_reader.label
 
         return image, label

@@ -28,6 +28,7 @@ class Settings:
         self.data_directory = 'data'
         self.logs_directory = 'logs'
         self.models_directory = 'models'
+        self.import_directory = 'import'
 
         # AWS specific overriding.
         if self.is_aws_instance():
