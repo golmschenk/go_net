@@ -278,13 +278,13 @@ class Net(multiprocessing.Process):
         :return: The label maps tensor.
         :rtype: tf.Tensor
         """
-        pixel_count = self.data.image_height * self.data.image_width
-        flat_images = tf.reshape(images, [-1, pixel_count * self.data.image_depth])
-        weights = weight_variable([pixel_count * self.data.image_depth, pixel_count], stddev=0.001)
+        pixel_count = self.settings.image_height * self.settings.image_width
+        flat_images = tf.reshape(images, [-1, pixel_count * self.settings.image_depth])
+        weights = weight_variable([pixel_count * self.settings.image_depth, pixel_count], stddev=0.001)
         biases = bias_variable([pixel_count], constant=0.001)
 
         flat_predicted_labels = tf.matmul(flat_images, weights) + biases
-        predicted_labels = tf.reshape(flat_predicted_labels, [-1, self.data.image_height, self.data.image_width, 1])
+        predicted_labels = tf.reshape(flat_predicted_labels, [-1, self.settings.image_height, self.settings.image_width, 1])
         return predicted_labels
 
     def create_loss_tensor(self, predicted_labels, labels):
@@ -529,7 +529,7 @@ class Net(multiprocessing.Process):
         """
         The code run before the test loop. Mostly for setting up things that will be used within the loop.
         """
-        self.predicted_test_labels = np.ndarray(shape=[0] + list(self.data.label_shape), dtype=np.float32)
+        self.predicted_test_labels = np.ndarray(shape=[0] + list(self.settings.label_shape), dtype=np.float32)
 
     def test_run_loop_step(self):
         """
