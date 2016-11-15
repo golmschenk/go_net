@@ -185,7 +185,7 @@ class Net(multiprocessing.Process):
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
     def mercury_module(self, name_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
-                       max_pool_depth, dropout_on=False, batch_norm_on=True):
+                       max_pool_depth, dropout_on=False, batch_norm_on=True, activation_function=leaky_relu):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
         convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are
@@ -205,15 +205,17 @@ class Net(multiprocessing.Process):
         :type dropout_on: bool
         :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
         :type batch_norm_on: bool
+        :param activation_function: The activation function to be applied.
+        :type activation_function: tf.Tensor -> tf.Tensor
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
         with tf.name_scope(name_scope):
-            part1 = convolution2d(input_tensor, aisle_convolution_depth, [1, 1], activation_fn=leaky_relu)
-            part2 = convolution2d(input_tensor, spatial_convolution_depth, [3, 1], activation_fn=leaky_relu)
-            part3 = convolution2d(input_tensor, spatial_convolution_depth, [1, 3], activation_fn=leaky_relu)
+            part1 = convolution2d(input_tensor, aisle_convolution_depth, [1, 1], activation_fn=activation_function)
+            part2 = convolution2d(input_tensor, spatial_convolution_depth, [3, 1], activation_fn=activation_function)
+            part3 = convolution2d(input_tensor, spatial_convolution_depth, [1, 3], activation_fn=activation_function)
             max_pool_output = max_pool2d(input_tensor, kernel_size=2, stride=1, padding='SAME')
-            part4 = convolution2d(max_pool_output, max_pool_depth, [1, 1], activation_fn=leaky_relu)
+            part4 = convolution2d(max_pool_output, max_pool_depth, [1, 1], activation_fn=activation_function)
             output_tensor = tf.concat(3, [part1, part2, part3, part4])
             if dropout_on:
                 output_tensor = dropout(output_tensor, self.dropout_keep_probability)
@@ -239,7 +241,7 @@ class Net(multiprocessing.Process):
         :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
         :type batch_norm_on: bool
         :param activation_function: The activation function to be applied.
-        :type activation_function: func
+        :type activation_function: tf.Tensor -> tf.Tensor
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
