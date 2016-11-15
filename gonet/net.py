@@ -222,7 +222,7 @@ class Net(multiprocessing.Process):
             return output_tensor
 
     def terra_module(self, name_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
-                     batch_norm_on=True):
+                     batch_norm_on=True, activation_function=leaky_relu):
         """
         A basic square 2D convolution layer followed by optional batch norm and dropout.
 
@@ -238,12 +238,14 @@ class Net(multiprocessing.Process):
         :type dropout_on: bool
         :param batch_norm_on: A boolean to choose whether or not to preform the batch norm. Defaults to True.
         :type batch_norm_on: bool
+        :param activation_function: The activation function to be applied.
+        :type activation_function: func
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
         with tf.name_scope(name_scope):
             output_tensor = convolution2d(input_tensor, convolution_output_depth, [kernel_size, kernel_size],
-                                          activation_fn=leaky_relu)
+                                          activation_fn=activation_function)
             if dropout_on:
                 output_tensor = dropout(output_tensor, self.dropout_keep_probability)
             if batch_norm_on:
