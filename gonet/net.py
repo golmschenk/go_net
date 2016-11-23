@@ -227,7 +227,7 @@ class Net(multiprocessing.Process):
             return output_tensor
 
     def terra_module(self, name_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
-                     normalization_function=batch_norm, activation_function=leaky_relu):
+                     normalization_function=None, activation_function=leaky_relu):
         """
         A basic square 2D convolution layer followed by optional batch norm and dropout.
 
