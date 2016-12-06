@@ -577,8 +577,7 @@ class Net(multiprocessing.Process):
             return
         return os.path.join(self.settings.models_directory, latest_model_name)
 
-    @staticmethod
-    def log_source_files(output_file_name):
+    def log_source_files(self, output_file_name):
         """
         Takes all the Python and txt files in the working directory and compresses them into a zip file.
 
@@ -592,6 +591,28 @@ class Net(multiprocessing.Process):
         with ZipFile(output_file_name + '.zip', 'w') as zip_file:
             for file_name in file_names_to_zip:
                 zip_file.write(file_name)
+            data_tree_string = self.generate_directory_tree_string(self.settings.data_directory)
+            zip_file.writestr('data_tree.txt', data_tree_string)
+
+    @staticmethod
+    def generate_directory_tree_string(directory):
+        """
+        Creates a string to display the file tree of a given directory.
+
+        :param directory: The directory (path) to show the tree of.
+        :type directory: str
+        :return: The string containing a tree display of the contained files.
+        :rtype: str
+        """
+        tree_string = ''
+        for root, _, files in os.walk(directory):
+            level = root.replace(directory, '').count(os.sep)
+            indent = ' ' * 4 * level
+            tree_string += '{}{}/\n'.format(indent, os.path.basename(root))
+            sub_indent = ' ' * 4 * (level + 1)
+            for f in files:
+                tree_string += '{}{}\n'.format(sub_indent, f)
+        return tree_string
 
 
 if __name__ == '__main__':
