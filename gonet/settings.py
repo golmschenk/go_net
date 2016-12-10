@@ -37,8 +37,8 @@ class Settings:
         self.import_directory = 'import'
 
         # AWS specific overriding.
-        if self.is_aws_instance():
-            self.aws_overrides()
+        if self.is_azure_instance():
+            self.azure_overrides()
 
         # Internal attributes.
         self._label_height = None
@@ -122,20 +122,21 @@ class Settings:
         self.label_height, self.label_width, self.label_depth = shape
 
     @staticmethod
-    def is_aws_instance():
+    def is_azure_instance():
         """
         Checks if the network is being run on an AWS instance.
 
         :return: True if on AWS, false otherwise.
         :rtype: bool
         """
-        completed_process = subprocess.run(["which", "ec2metadata"])
+        completed_process = subprocess.run(['grep', '-q', 'unknown-245', '/var/lib/dhcp/dhclient.eth0.leases'],
+                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return completed_process.returncode == 0
 
-    def aws_overrides(self):
+    def azure_overrides(self):
         """
         Updates the settings for running in a AWS instance.
         """
-        self.data_directory = '/home/ubuntu/efs/data'
-        self.logs_directory = '/home/ubuntu/efs/logs'
-        self.models_directory = '/home/ubuntu/efs/models'
+        self.data_directory = '/home/golmschenk/storage/data'
+        self.logs_directory = '/home/golmschenk/storage/logs'
+        self.models_directory = '/home/golmschenk/storage/models'
