@@ -62,7 +62,7 @@ class TFRecordsReader:
             label_depth_tensor = tf.cast(features['label_depth'], tf.int64)
         # To read the TFRecords file, we need to start a TF session (including queues to read the file name).
         with tf.Session() as session:
-            initialize_op = tf.group(tf.initialize_all_variables(), tf.initialize_local_variables())
+            initialize_op = tf.global_variables_initializer()
             session.run(initialize_op)
             coordinator = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coordinator)

@@ -103,7 +103,7 @@ class Net(multiprocessing.Process):
         validation_writer = tf.train.SummaryWriter(summary_path + '_validation', self.session.graph)
 
         # The op for initializing the variables.
-        initialize_op = tf.initialize_all_variables()
+        initialize_op = tf.global_variables_initializer()
 
         # Prepare saver.
         self.saver = tf.train.Saver(max_to_keep=self.settings.number_of_models_to_keep)

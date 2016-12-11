@@ -73,8 +73,8 @@ class Data:
         :return: The processed image and label.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        image = tf.image.resize_images(image, self.settings.image_height, self.settings.image_width)
-        label = tf.image.resize_images(label, self.settings.image_height, self.settings.image_width)
+        image = tf.image.resize_images(image, [self.settings.image_height, self.settings.image_width])
+        label = tf.image.resize_images(label, [self.settings.image_height, self.settings.image_width])
         return image, label
 
     @staticmethod
