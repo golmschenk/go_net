@@ -89,7 +89,7 @@ class Data:
         :return: The processed image and label.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        image = tf.image.per_image_whitening(image)
+        image = tf.image.per_image_standardization(image)
         return image, label
 
     @staticmethod
