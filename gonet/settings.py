@@ -35,6 +35,7 @@ class Settings:
         self.logs_directory = 'logs'
         self.models_directory = 'models'
         self.import_directory = 'import'
+        # Note, these use glob matching, not regex.
         self.train_patterns = None
         self.validation_patterns = None
         self.test_patterns = None
