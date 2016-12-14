@@ -3,10 +3,10 @@ Code for managing the TFRecord data.
 """
 import glob
 import os
-
 import h5py
 import numpy as np
 import tensorflow as tf
+import re
 
 from gonet.settings import Settings
 from gonet.tfrecords_reader import TFRecordsReader
@@ -193,19 +193,19 @@ class Data:
             num_epochs = None
             shuffle = True
         if data_type == 'train':
-            patterns = self.settings.train_patterns
+            pattern = self.settings.train_pattern
         elif data_type == 'validation':
-            patterns = self.settings.validation_patterns
+            pattern = self.settings.validation_pattern
         elif data_type == 'test':
-            patterns = self.settings.test_patterns
+            pattern = self.settings.test_pattern
         elif data_type == 'deploy':
-            patterns = self.settings.deploy_patterns
+            pattern = self.settings.deploy_pattern
         else:
             raise ValueError('{} is not a valid data type.'.format(data_type))
-        file_paths = []
-        for pattern in patterns:
-            file_paths += glob.glob(os.path.join(self.settings.data_directory, '**', '{}.tfrecords'.format(pattern)),
-                                    recursive=True)
+        all_file_paths = glob.glob(os.path.join(self.settings.data_directory, '**', '*.tfrecords'),
+                                          recursive=True)
+        file_paths = [file_path for file_path in all_file_paths if re.search(pattern, os.path.basename(file_path))]
+
         file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
         return file_name_queue
 

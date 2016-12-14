@@ -36,11 +36,11 @@ class Settings:
         self.logs_directory = 'logs'
         self.models_directory = 'models'
         self.import_directory = 'import'
-        # Note, these use glob matching, not regex.
-        self.train_patterns = '*'
-        self.validation_patterns = '*'
-        self.test_patterns = None
-        self.deploy_patterns = None
+        # Note, these use regex.
+        self.train_pattern = 'nyu'
+        self.validation_pattern = '.*'
+        self.test_pattern = None
+        self.deploy_pattern = None
 
         # AWS specific overriding.
         if self.is_azure_instance():
