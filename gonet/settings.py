@@ -1,6 +1,7 @@
 """
 Code for the settings of the network.
 """
+import os
 import subprocess
 
 
@@ -36,14 +37,17 @@ class Settings:
         self.models_directory = 'models'
         self.import_directory = 'import'
         # Note, these use glob matching, not regex.
-        self.train_patterns = None
-        self.validation_patterns = None
+        self.train_patterns = '*'
+        self.validation_patterns = '*'
         self.test_patterns = None
         self.deploy_patterns = None
 
         # AWS specific overriding.
         if self.is_azure_instance():
             self.azure_overrides()
+
+        # Setup.
+        self.create_needed_paths()
 
         # Internal attributes.
         self._label_height = None
@@ -145,3 +149,10 @@ class Settings:
         self.data_directory = '/home/golmschenk/storage/data'
         self.logs_directory = '/home/golmschenk/storage/logs'
         self.models_directory = '/home/golmschenk/storage/models'
+
+    def create_needed_paths(self):
+        """
+        Creates the logging and model storage paths if they don't exist
+        """
+        os.makedirs(self.logs_directory, exist_ok=True)
+        os.makedirs(self.models_directory, exist_ok=True)
