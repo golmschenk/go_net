@@ -185,7 +185,7 @@ class Net(multiprocessing.Process):
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
     def mercury_module(self, name_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
-                       max_pool_depth, dropout_on=False, normalization_function=batch_norm,
+                       max_pool_depth, dropout_on=False, normalization_function=None,
                        activation_function=leaky_relu):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
