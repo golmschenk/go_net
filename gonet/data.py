@@ -192,9 +192,39 @@ class Data:
         else:
             num_epochs = None
             shuffle = True
+        file_paths = glob.glob(os.path.join(self.settings.data_directory, data_type, '*.tfrecords'))
+        file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
+        return file_name_queue
+
+    def file_name_queue_for_patterns(self, data_type):
+        """
+        Creates the files name queue for a single TFRecords file.
+
+        :param data_type: The type of dataset being created.
+        :type data_type: str
+        :return: The file name queue.
+        :rtype: tf.QueueBase
+        """
+        if data_type in ['test', 'deploy']:
+            num_epochs = 1
+            shuffle = False
+        else:
+            num_epochs = None
+            shuffle = True
+        if data_type == 'train':
+            patterns = self.settings.train_patterns
+        elif data_type == 'validation':
+            patterns = self.settings.validation_patterns
+        elif data_type == 'test':
+            patterns = self.settings.test_patterns
+        elif data_type == 'deploy':
+            patterns = self.settings.deploy_patterns
+        else:
+            raise ValueError('{} is not a valid data type.'.format(data_type))
         file_paths = []
-        for file_path in glob.glob(os.path.join(self.settings.data_directory, data_type, '*.tfrecords')):
-            file_paths.append(file_path)
+        for pattern in patterns:
+            file_paths += glob.glob(os.path.join(self.settings.data_directory, '**', '{}.tfrecords'.format(pattern)),
+                                    recursive=True)
         file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
         return file_name_queue
 

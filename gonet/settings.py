@@ -35,6 +35,10 @@ class Settings:
         self.logs_directory = 'logs'
         self.models_directory = 'models'
         self.import_directory = 'import'
+        self.train_patterns = None
+        self.validation_patterns = None
+        self.test_patterns = None
+        self.deploy_patterns = None
 
         # AWS specific overriding.
         if self.is_azure_instance():
