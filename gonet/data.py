@@ -2,6 +2,7 @@
 Code for managing the TFRecord data.
 """
 import glob
+import json
 import os
 import h5py
 import numpy as np
@@ -158,7 +159,10 @@ class Data:
         :return: The images and depths inputs.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        file_name_queue = self.file_name_queue_for_patterns(data_type)
+        if self.settings.datasets_json:
+            file_name_queue = self.file_name_queue_from_json(data_type)
+        else:
+            file_name_queue = self.file_name_queue_for_patterns(data_type)
         image, label = self.read_and_decode_single_example_from_tfrecords(file_name_queue, data_type=data_type)
         image, label = self.preaugmentation_preprocess(image, label)
         if data_type == 'train':
@@ -203,9 +207,30 @@ class Data:
         else:
             raise ValueError('{} is not a valid data type.'.format(data_type))
         all_file_paths = glob.glob(os.path.join(self.settings.data_directory, '**', '*.tfrecords'),
-                                          recursive=True)
+                                   recursive=True)
         file_paths = [file_path for file_path in all_file_paths if re.search(pattern, os.path.basename(file_path))]
 
+        file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
+        return file_name_queue
+
+    def file_name_queue_from_json(self, data_type):
+        """
+        Creates the files name queue for a single TFRecords file from JSON.
+
+        :param data_type: The type of dataset being created.
+        :type data_type: str
+        :return: The file name queue.
+        :rtype: tf.QueueBase
+        """
+        if data_type in ['test', 'deploy']:
+            num_epochs = 1
+            shuffle = False
+        else:
+            num_epochs = None
+            shuffle = True
+        with open(self.settings.datasets_json) as json_file:
+            datasets_dictionary = json.load(json_file)
+        file_paths = datasets_dictionary[data_type]
         file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
         return file_name_queue
 

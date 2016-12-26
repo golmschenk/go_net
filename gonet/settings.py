@@ -37,10 +37,11 @@ class Settings:
         self.models_directory = 'models'
         self.import_directory = 'import'
         # Note, these use regex.
-        self.train_pattern = 'nyu'
+        self.train_pattern = '^!($'
         self.validation_pattern = '.*'
         self.test_pattern = None
         self.deploy_pattern = None
+        self.datasets_json = None
 
         # AWS specific overriding.
         if self.is_azure_instance():
