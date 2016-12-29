@@ -235,7 +235,8 @@ class Data:
         """
         with open(self.settings.datasets_json) as json_file:
             datasets_dictionary = json.load(json_file)
-        file_paths = datasets_dictionary[data_type]
+        file_basenames = datasets_dictionary[data_type]
+        file_paths = [os.path.join(self.settings.data_directory, basename) for basename in file_basenames]
         return file_paths
 
     def convert_mat_file_to_numpy_file(self, mat_file_path, number_of_samples=None):
