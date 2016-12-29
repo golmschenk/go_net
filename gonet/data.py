@@ -159,10 +159,7 @@ class Data:
         :return: The images and depths inputs.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        if self.settings.datasets_json:
-            file_name_queue = self.file_name_queue_from_json(data_type)
-        else:
-            file_name_queue = self.file_name_queue_for_patterns(data_type)
+        file_name_queue = self.attain_file_name_queue(data_type)
         image, label = self.read_and_decode_single_example_from_tfrecords(file_name_queue, data_type=data_type)
         image, label = self.preaugmentation_preprocess(image, label)
         if data_type == 'train':
@@ -181,9 +178,9 @@ class Data:
 
         return images, labels
 
-    def file_name_queue_for_patterns(self, data_type):
+    def attain_file_name_queue(self, data_type):
         """
-        Creates the files name queue for a single TFRecords file.
+        Creates the file name queue for the specified data set.
 
         :param data_type: The type of dataset being created.
         :type data_type: str
@@ -196,6 +193,22 @@ class Data:
         else:
             num_epochs = None
             shuffle = True
+        if self.settings.datasets_json:
+            file_paths = self.file_names_from_json(data_type)
+        else:
+            file_paths = self.file_names_for_patterns(data_type)
+        file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
+        return file_name_queue
+
+    def file_names_for_patterns(self, data_type):
+        """
+        Creates the files names list for the dataset from patterns.
+
+        :param data_type: The type of dataset being created.
+        :type data_type: str
+        :return: The file names.
+        :rtype: list[str]
+        """
         if data_type == 'train':
             pattern = self.settings.train_pattern
         elif data_type == 'validation':
@@ -209,30 +222,21 @@ class Data:
         all_file_paths = glob.glob(os.path.join(self.settings.data_directory, '**', '*.tfrecords'),
                                    recursive=True)
         file_paths = [file_path for file_path in all_file_paths if re.search(pattern, os.path.basename(file_path))]
+        return file_paths
 
-        file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
-        return file_name_queue
-
-    def file_name_queue_from_json(self, data_type):
+    def file_names_from_json(self, data_type):
         """
-        Creates the files name queue for a single TFRecords file from JSON.
+        Creates the files names list for the dataset from JSON.
 
         :param data_type: The type of dataset being created.
         :type data_type: str
-        :return: The file name queue.
-        :rtype: tf.QueueBase
+        :return: The file names.
+        :rtype: list[str]
         """
-        if data_type in ['test', 'deploy']:
-            num_epochs = 1
-            shuffle = False
-        else:
-            num_epochs = None
-            shuffle = True
         with open(self.settings.datasets_json) as json_file:
             datasets_dictionary = json.load(json_file)
         file_paths = datasets_dictionary[data_type]
-        file_name_queue = tf.train.string_input_producer(file_paths, num_epochs=num_epochs, shuffle=shuffle)
-        return file_name_queue
+        return file_paths
 
     def convert_mat_file_to_numpy_file(self, mat_file_path, number_of_samples=None):
         """
