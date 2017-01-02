@@ -40,7 +40,7 @@ class TFRecordsReader:
             initialize_op = tf.global_variables_initializer()
             session.run(initialize_op)
             images, labels = session.run([image_tensors, label_tensors])
-        return np.stack(images), np.stack(images)
+        return np.stack(images), np.stack(labels)
 
     @staticmethod
     def attain_feature_types(data_type):
