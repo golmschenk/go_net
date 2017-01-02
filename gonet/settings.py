@@ -35,7 +35,7 @@ class Settings:
         self.data_directory = 'data'
         self.logs_directory = 'logs'
         self.models_directory = 'models'
-        self.import_directory = 'import'
+        self.import_directory = 'data/import'
         # Note, these use regex.
         self.train_pattern = '.*'
         self.validation_pattern = '.*'

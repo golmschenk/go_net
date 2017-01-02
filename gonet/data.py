@@ -57,9 +57,10 @@ class Data:
         :return: The read file data including the image data and label data.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        go_tfrecords_reader = TFRecordsReader(file_name_queue, data_type=data_type)
-        image = tf.cast(go_tfrecords_reader.image, tf.float32)
-        label = go_tfrecords_reader.label
+        go_tfrecords_reader = TFRecordsReader()
+        image, label = go_tfrecords_reader.create_image_and_label_inputs_from_file_name_queue(file_name_queue,
+                                                                                              data_type=data_type)
+        image = tf.cast(image, tf.float32)
 
         return image, label
 
