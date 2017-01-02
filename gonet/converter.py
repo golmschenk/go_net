@@ -6,16 +6,31 @@ import os
 import shlex
 import shutil
 import subprocess
-
 import numpy as np
 import re
 from PIL import Image
+
+from gonet.tfrecords_reader import TFRecordsReader
 
 
 class Converter:
     """
     A class for simple conversions of data.
     """
+
+    @staticmethod
+    def convert_tfrecords_to_numpy(input_tfrecords_path, output_numpy_directory):
+        """
+        Converts a tfrecords file into image and label numpy files.
+        """
+        os.makedirs(output_numpy_directory, exist_ok=True)
+        images_numpy, labels_numpy = TFRecordsReader().convert_to_numpy(input_tfrecords_path)
+        data_name = os.path.splitext(os.path.basename(input_tfrecords_path))[0]
+        output_base_name = os.path.join(output_numpy_directory, data_name)
+        images_stacked_numpy = np.stack(images_numpy)
+        np.save('{}_images.npy'.format(output_base_name), images_stacked_numpy)
+        labels_stacked_numpy = np.stack(labels_numpy)
+        np.save('{}_labels.npy'.format(output_base_name), labels_stacked_numpy)
 
     @staticmethod
     def convert_video_to_images(input_video_path, output_frames_directory, frames_per_second=30):
