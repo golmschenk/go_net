@@ -9,6 +9,49 @@ class TFRecordsReader:
     """
     A class for dealing with reading and interacting with TFRecords outside of the main network.
     """
+    def convert_to_numpy(self, file_name, data_type=None):
+        """
+        Reads entire TFRecords file as NumPy.
+
+        :param file_name: The TFRecords file name to read.
+        :type file_name: str
+        :param data_type: Data type of data. Used if that data type doesn't include things like labels.
+        :type data_type: str
+        :return: The images and labels NumPy
+        :rtype: (np.ndarray, np.ndarray)
+        """
+        feature_types = {
+            'image_height': tf.FixedLenFeature([], tf.int64),
+            'image_width': tf.FixedLenFeature([], tf.int64),
+            'image_depth': tf.FixedLenFeature([], tf.int64),
+            'image_raw': tf.FixedLenFeature([], tf.string)
+        }
+        if data_type != 'deploy':
+            feature_types.update({
+                'label_height': tf.FixedLenFeature([], tf.int64),
+                'label_width': tf.FixedLenFeature([], tf.int64),
+                'label_depth': tf.FixedLenFeature([], tf.int64),
+                'label_raw': tf.FixedLenFeature([], tf.string)
+            })
+        image_tensors = []
+        label_tensors = []
+        for tfrecord in tf.python_io.tf_record_iterator(file_name):
+            features = tf.parse_single_example(tfrecord, features=feature_types)
+            image_shape, label_shape = self.extract_shapes_from_tfrecords_features(features, data_type)
+
+            flat_image = tf.decode_raw(features['image_raw'], tf.uint8)
+            image_tensor = tf.reshape(flat_image, image_shape)
+            image_tensors.append(image_tensor)
+
+            if data_type != 'deploy':
+                flat_label = tf.decode_raw(features['label_raw'], tf.float32)
+                label_tensor = tf.reshape(flat_label, label_shape)
+                label_tensors.append(label_tensor)
+        with tf.Session() as session:
+            initialize_op = tf.global_variables_initializer()
+            session.run(initialize_op)
+            images, labels = session.run([image_tensors, label_tensors])
+        return images, labels
 
     def create_image_and_label_inputs_from_file_name_queue(self, file_name_queue, data_type=None):
         """
