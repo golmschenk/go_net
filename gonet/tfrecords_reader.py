@@ -20,19 +20,7 @@ class TFRecordsReader:
         :return: The images and labels NumPy
         :rtype: (np.ndarray, np.ndarray)
         """
-        feature_types = {
-            'image_height': tf.FixedLenFeature([], tf.int64),
-            'image_width': tf.FixedLenFeature([], tf.int64),
-            'image_depth': tf.FixedLenFeature([], tf.int64),
-            'image_raw': tf.FixedLenFeature([], tf.string)
-        }
-        if data_type != 'deploy':
-            feature_types.update({
-                'label_height': tf.FixedLenFeature([], tf.int64),
-                'label_width': tf.FixedLenFeature([], tf.int64),
-                'label_depth': tf.FixedLenFeature([], tf.int64),
-                'label_raw': tf.FixedLenFeature([], tf.string)
-            })
+        feature_types = self.attain_feature_types(data_type)
         image_tensors = []
         label_tensors = []
         for tfrecord in tf.python_io.tf_record_iterator(file_name):
@@ -53,19 +41,16 @@ class TFRecordsReader:
             images, labels = session.run([image_tensors, label_tensors])
         return images, labels
 
-    def create_image_and_label_inputs_from_file_name_queue(self, file_name_queue, data_type=None):
+    @staticmethod
+    def attain_feature_types(data_type):
         """
-        Creates the inputs for the image and label for a given file name queue.
+        Get the needed features type dictionary to read the TFRecords.
 
-        :param file_name_queue: The file name queue to be used.
-        :type file_name_queue: tf.Queue
-        :param data_type: The type of data (train, validation, test, deploy, etc) to determine how to process.
+        :param data_type: The type of data being process. Determines whether to look for labels.
         :type data_type: str
-        :return: The image and label inputs.
-        :rtype: (tf.Tensor, tf.Tensor)
+        :return: The feature type dictionary.
+        :rtype: dict[str, tf.FixedLenFeature]
         """
-        reader = tf.TFRecordReader()
-        _, serialized_example = reader.read(file_name_queue)
         feature_types = {
             'image_height': tf.FixedLenFeature([], tf.int64),
             'image_width': tf.FixedLenFeature([], tf.int64),
@@ -79,6 +64,22 @@ class TFRecordsReader:
                 'label_depth': tf.FixedLenFeature([], tf.int64),
                 'label_raw': tf.FixedLenFeature([], tf.string)
             })
+        return feature_types
+
+    def create_image_and_label_inputs_from_file_name_queue(self, file_name_queue, data_type=None):
+        """
+        Creates the inputs for the image and label for a given file name queue.
+
+        :param file_name_queue: The file name queue to be used.
+        :type file_name_queue: tf.Queue
+        :param data_type: The type of data (train, validation, test, deploy, etc) to determine how to process.
+        :type data_type: str
+        :return: The image and label inputs.
+        :rtype: (tf.Tensor, tf.Tensor)
+        """
+        reader = tf.TFRecordReader()
+        _, serialized_example = reader.read(file_name_queue)
+        feature_types = self.attain_feature_types(data_type)
         features = tf.parse_single_example(serialized_example, features=feature_types)
 
         image_shape, label_shape = self.extract_shapes_from_tfrecords_features(features, data_type)
