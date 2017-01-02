@@ -30,12 +30,12 @@ class TFRecordsReader:
 
             flat_image = tf.decode_raw(features['image_raw'], tf.uint8)
             image_tensor = tf.reshape(flat_image, image_shape)
-            image_tensors.append(image_tensor)
+            image_tensors.append(tf.squeeze(image_tensor))
 
             if data_type != 'deploy':
                 flat_label = tf.decode_raw(features['label_raw'], tf.float32)
                 label_tensor = tf.reshape(flat_label, label_shape)
-                label_tensors.append(label_tensor)
+                label_tensors.append(tf.squeeze(label_tensor))
         with tf.Session() as session:
             initialize_op = tf.global_variables_initializer()
             session.run(initialize_op)
