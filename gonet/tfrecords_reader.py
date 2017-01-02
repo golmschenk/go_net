@@ -2,6 +2,7 @@
 Code for dealing with reading and interacting with TFRecords outside of the main network.
 """
 
+import numpy as np
 import tensorflow as tf
 
 
@@ -39,7 +40,7 @@ class TFRecordsReader:
             initialize_op = tf.global_variables_initializer()
             session.run(initialize_op)
             images, labels = session.run([image_tensors, label_tensors])
-        return images, labels
+        return np.stack(images), np.stack(images)
 
     @staticmethod
     def attain_feature_types(data_type):

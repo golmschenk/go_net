@@ -27,10 +27,8 @@ class Converter:
         images_numpy, labels_numpy = TFRecordsReader().convert_to_numpy(input_tfrecords_path)
         data_name = os.path.splitext(os.path.basename(input_tfrecords_path))[0]
         output_base_name = os.path.join(output_numpy_directory, data_name)
-        images_stacked_numpy = np.stack(images_numpy)
-        np.save('{}_images.npy'.format(output_base_name), images_stacked_numpy)
-        labels_stacked_numpy = np.stack(labels_numpy)
-        np.save('{}_labels.npy'.format(output_base_name), labels_stacked_numpy)
+        np.save('{}_images.npy'.format(output_base_name), images_numpy)
+        np.save('{}_labels.npy'.format(output_base_name), labels_numpy)
 
     @staticmethod
     def convert_video_to_images(input_video_path, output_frames_directory, frames_per_second=30):
