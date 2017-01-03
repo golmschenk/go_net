@@ -22,24 +22,27 @@ class TFRecordsReader:
         :rtype: (np.ndarray, np.ndarray)
         """
         feature_types = self.attain_feature_types(data_type)
-        image_tensors = []
-        label_tensors = []
+        images = []
+        labels = []
         for tfrecord in tf.python_io.tf_record_iterator(file_name):
-            features = tf.parse_single_example(tfrecord, features=feature_types)
-            image_shape, label_shape = self.extract_shapes_from_tfrecords_features(features, data_type)
-
-            flat_image = tf.decode_raw(features['image_raw'], tf.uint8)
-            image_tensor = tf.reshape(flat_image, image_shape)
-            image_tensors.append(tf.squeeze(image_tensor))
-
-            if data_type != 'deploy':
-                flat_label = tf.decode_raw(features['label_raw'], tf.float32)
-                label_tensor = tf.reshape(flat_label, label_shape)
-                label_tensors.append(tf.squeeze(label_tensor))
-        with tf.Session() as session:
-            initialize_op = tf.global_variables_initializer()
-            session.run(initialize_op)
-            images, labels = session.run([image_tensors, label_tensors])
+            with tf.Graph().as_default() as graph:  # Create a separate as this runs slow when on one graph.
+                features = tf.parse_single_example(tfrecord, features=feature_types)
+                image_shape, label_shape = self.extract_shapes_from_tfrecords_features(features, data_type)
+                flat_image = tf.decode_raw(features['image_raw'], tf.uint8)
+                image_tensor = tf.reshape(flat_image, image_shape)
+                image_tensor = tf.squeeze(image_tensor)
+                if data_type != 'deploy':
+                    flat_label = tf.decode_raw(features['label_raw'], tf.float32)
+                    label_tensor = tf.reshape(flat_label, label_shape)
+                    label_tensor = tf.squeeze(label_tensor)
+                else:
+                    label_tensor = tf.constant(-1.0, dtype=tf.float32, shape=[1, 1, 1])
+                with tf.Session(graph=graph) as session:
+                    initialize_op = tf.global_variables_initializer()
+                    session.run(initialize_op)
+                    image, label = session.run([image_tensor, label_tensor])
+            images.append(image)
+            labels.append(label)
         return np.stack(images), np.stack(labels)
 
     @staticmethod
