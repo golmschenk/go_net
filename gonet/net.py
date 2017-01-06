@@ -186,7 +186,7 @@ class Net(multiprocessing.Process):
 
     def mercury_module(self, variable_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
                        max_pool_depth, dropout_on=False, normalization_function=None,
-                       activation_function=leaky_relu):
+                       activation_function=leaky_relu, strided_max_pool_on=False):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
         convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are
@@ -208,6 +208,8 @@ class Net(multiprocessing.Process):
         :type normalization_function: tf.Tensor -> tf.Tensor
         :param activation_function: The activation function to be applied.
         :type activation_function: tf.Tensor -> tf.Tensor
+        :param strided_max_pool_on: Whether to include a strided max pool at the end of the module.
+        :type strided_max_pool_on: bool
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
@@ -222,12 +224,11 @@ class Net(multiprocessing.Process):
             part4 = convolution2d(max_pool_output, max_pool_depth, [1, 1], activation_fn=activation_function,
                                   normalizer_fn=normalization_function)
             output_tensor = tf.concat(3, [part1, part2, part3, part4])
-            if dropout_on:
-                output_tensor = dropout(output_tensor, self.dropout_keep_probability)
+            output_tensor = self.general_module_end_operations(output_tensor, dropout_on, strided_max_pool_on)
             return output_tensor
 
     def terra_module(self, variable_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
-                     normalization_function=None, activation_function=leaky_relu):
+                     normalization_function=None, activation_function=leaky_relu, strided_max_pool_on=False):
         """
         A basic square 2D convolution layer followed by optional batch norm and dropout.
 
@@ -244,16 +245,36 @@ class Net(multiprocessing.Process):
         :param normalization_function: A normalization to be applied before activations. Defaults to batch_norm.
         :type normalization_function: tf.Tensor -> tf.Tensor
         :param activation_function: The activation function to be applied.
-        :type activation_function: tf.Tensor -> tf.Tensor
+        :type activation_function: tf.Tensor -> tf.Tensor\
+        :param strided_max_pool_on: Whether to include a strided max pool at the end of the module.
+        :type strided_max_pool_on: bool
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
         with tf.variable_scope(variable_scope):
             output_tensor = convolution2d(input_tensor, convolution_output_depth, [kernel_size, kernel_size],
                                           activation_fn=activation_function, normalizer_fn=normalization_function)
-            if dropout_on:
-                output_tensor = dropout(output_tensor, self.dropout_keep_probability)
+            output_tensor = self.general_module_end_operations(output_tensor, dropout_on, strided_max_pool_on)
             return output_tensor
+
+    def general_module_end_operations(self, tensor, dropout_on, strided_max_pool_on):
+        """
+        Common end of module operations.
+
+        :param tensor: The tensor being processed.
+        :type tensor: tf.Tensor
+        :param dropout_on: Whether to include dropout or not.
+        :type dropout_on: bool
+        :param strided_max_pool_on: Whether to include a strided max pool at the end of the module.
+        :type strided_max_pool_on: bool
+        :return: The processed tensor.
+        :rtype: tf.Tensor
+        """
+        if strided_max_pool_on:
+            tensor = max_pool2d(tensor, kernel_size=3, stride=2, padding='VALID')
+        if dropout_on:
+            tensor = dropout(tensor, self.dropout_keep_probability)
+        return tensor
 
     def create_shallow_net_inference_op(self, images):
         """
