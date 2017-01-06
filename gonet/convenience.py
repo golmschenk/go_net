@@ -92,7 +92,7 @@ def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, con
     :return: The output/activation tensor.
     :rtype: tf.Tensor
     """
-    with tf.name_scope(scope_name):
+    with tf.variable_scope(scope_name):
         weights = weight_variable([conv_height, conv_width, depth_in, depth_out])
         biases = bias_variable([depth_out])
         output_tensor = leaky_relu(conv2d(input_tensor, weights, strides=strides) + biases)

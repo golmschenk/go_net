@@ -18,7 +18,10 @@ class Settings:
         self.learning_rate_decay_rate = 0.1
         self.learning_rate_decay_steps = 100000
 
-        # Logging
+        # Advanced settings
+        self.scopes_to_train = None  # The list of scopes or None for all scopes.
+
+        # Logging and saving
         self.print_step_period = 1
         self.summary_step_period = 100
         self.validation_step_period = 100

@@ -1,5 +1,5 @@
 """
-Code related to the GoNet.
+Code related to the GoNet class.
 """
 import datetime
 import multiprocessing
@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, batch_norm, dropout
+from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, dropout
 
 from gonet.data import Data
 from gonet.interface import Interface
@@ -19,7 +19,7 @@ from gonet.settings import Settings
 
 class Net(multiprocessing.Process):
     """
-    The class to build and interact with the Net TensorFlow graph.
+    The class to build and interact with the GoNet TensorFlow graph.
     """
 
     def __init__(self, message_queue=None, settings=None):
@@ -74,7 +74,7 @@ class Net(multiprocessing.Process):
 
         print('Preparing data...')
         # Setup the inputs.
-        with tf.name_scope('Input'):
+        with tf.variable_scope('Input'):
             images_tensor, labels_tensor = self.create_input_tensors()
 
         print('Building graph...')
@@ -82,13 +82,13 @@ class Net(multiprocessing.Process):
         predicted_labels_tensor = self.create_inference_op(images_tensor)
 
         # Add the loss operations to the graph.
-        with tf.name_scope('loss'):
+        with tf.variable_scope('loss'):
             loss_tensor = self.create_loss_tensor(predicted_labels_tensor, labels_tensor)
             reduce_mean_loss_tensor = tf.reduce_mean(loss_tensor)
             tf.scalar_summary(self.step_summary_name, reduce_mean_loss_tensor)
 
         if self.image_summary_on:
-            with tf.name_scope('comparison_summary'):
+            with tf.variable_scope('comparison_summary'):
                 self.image_comparison_summary(images_tensor, labels_tensor, predicted_labels_tensor, loss_tensor)
 
         # Add the training operations to the graph.
@@ -184,7 +184,7 @@ class Net(multiprocessing.Process):
         """
         return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
 
-    def mercury_module(self, name_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
+    def mercury_module(self, variable_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
                        max_pool_depth, dropout_on=False, normalization_function=None,
                        activation_function=leaky_relu):
         """
@@ -192,8 +192,8 @@ class Net(multiprocessing.Process):
         convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are
         concatenated to form an output tensor.
 
-        :param name_scope: What to name the module scope in the graph.
-        :type name_scope: str
+        :param variable_scope: What to name the module scope in the graph.
+        :type variable_scope: str
         :param input_tensor: The input tensor to work on.
         :type input_tensor: tf.Tensor
         :param aisle_convolution_depth: The output depth of the 1x1 convolution.
@@ -211,7 +211,7 @@ class Net(multiprocessing.Process):
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
-        with tf.name_scope(name_scope):
+        with tf.variable_scope(variable_scope):
             part1 = convolution2d(input_tensor, aisle_convolution_depth, [1, 1], activation_fn=activation_function,
                                   normalizer_fn=normalization_function)
             part2 = convolution2d(input_tensor, spatial_convolution_depth, [3, 1], activation_fn=activation_function,
@@ -226,13 +226,13 @@ class Net(multiprocessing.Process):
                 output_tensor = dropout(output_tensor, self.dropout_keep_probability)
             return output_tensor
 
-    def terra_module(self, name_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
+    def terra_module(self, variable_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
                      normalization_function=None, activation_function=leaky_relu):
         """
         A basic square 2D convolution layer followed by optional batch norm and dropout.
 
-        :param name_scope: What to name the module scope in the graph.
-        :type name_scope: str
+        :param variable_scope: What to name the module scope in the graph.
+        :type variable_scope: str
         :param input_tensor: The input tensor to work on.
         :type input_tensor: tf.Tensor
         :param convolution_output_depth: The output depth of the convolution.
@@ -248,7 +248,7 @@ class Net(multiprocessing.Process):
         :return: The output activation tensor.
         :rtype: tf.Tensor
         """
-        with tf.name_scope(name_scope):
+        with tf.variable_scope(variable_scope):
             output_tensor = convolution2d(input_tensor, convolution_output_depth, [kernel_size, kernel_size],
                                           activation_fn=activation_function, normalizer_fn=normalization_function)
             if dropout_on:
@@ -345,8 +345,23 @@ class Net(multiprocessing.Process):
         :rtype: tf.Operation
         """
         tf.scalar_summary('Learning rate', self.learning_rate_tensor)
+        variables_to_train = self.attain_variables_to_train()
         return tf.train.AdamOptimizer(self.learning_rate_tensor).minimize(value_to_minimize,
-                                                                          global_step=self.global_step)
+                                                                          global_step=self.global_step,
+                                                                          var_list=variables_to_train)
+
+    def attain_variables_to_train(self):
+        """
+        Gets the list of variables to train based on the scopes to train list.
+
+        :return: The list of variables to train.
+        :rtype: list[tf.Variable]
+        """
+        if self.settings.scopes_to_train:
+            return [variable for scope in self.settings.scopes_to_train for variable in
+                    tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)]
+        else:
+            return None
 
     @staticmethod
     def convert_to_heat_map_rgb(tensor):
