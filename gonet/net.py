@@ -40,7 +40,7 @@ class Net(multiprocessing.Process):
         self.image_summary_on = True
 
         # Internal setup.
-        self.restore_model = None
+        self.restore_model_file_name = None
         self.stop_signal = False
         self.global_step = tf.Variable(0, name='global_step', trainable=False)
         self.saver = None
@@ -108,19 +108,19 @@ class Net(multiprocessing.Process):
         # Prepare saver.
         self.saver = tf.train.Saver(max_to_keep=self.settings.number_of_models_to_keep)
 
-        print('Starting training...')
+        print('Initializing graph...')
         # Initialize the variables.
         self.session.run(initialize_op)
 
-        # Reload from saved model if passed.
-        if self.restore_model:
-            print('Restoring model from %s...' % self.restore_model)
-            self.saver.restore(self.session, self.restore_model)
+        # Restore from saved model if passed.
+        if self.restore_model_file_name:
+            self.model_restore()
 
         # Start input enqueue threads.
         coordinator = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=self.session, coord=coordinator)
 
+        print('Starting training...')
         # Preform the training loop.
         try:
             while not coordinator.should_stop() and not self.stop_signal:
@@ -172,6 +172,21 @@ class Net(multiprocessing.Process):
         # Wait for threads to finish.
         coordinator.join(threads)
         self.session.close()
+
+    def model_restore(self):
+        """
+        Restores a saved model.
+        """
+        print('Restoring model from %s...' % self.restore_model_file_name)
+        if self.settings.restore_mode == 'continue':
+            variables_to_restore = None  # All variables.
+        elif self.settings.restore_mode == 'transfer':
+            # Only restore trainable variabales (i.e. don't restore global step, decayed learning rate, and the like).
+            variables_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+        else:
+            raise ValueError('\'{}\' is not a valid restore mode.'.format(self.settings.restore_mode))
+        restorer = tf.train.Saver(var_list=variables_to_restore)
+        restorer.restore(self.session, self.restore_model_file_name)
 
     def create_inference_op(self, images):
         """
@@ -509,9 +524,9 @@ class Net(multiprocessing.Process):
         """
         Use a trained model to predict labels for a test set of images.
         """
-        if self.restore_model is None:
-            self.restore_model = self.attain_latest_model_path()
-            if not self.restore_model:
+        if self.restore_model_file_name is None:
+            self.restore_model_file_name = self.attain_latest_model_path()
+            if not self.restore_model_file_name:
                 print('No model to restore from found.')
                 return
 
@@ -527,8 +542,7 @@ class Net(multiprocessing.Process):
         initialize_op = tf.group(tf.initialize_all_variables(), tf.initialize_local_variables())
 
         # Prepare the saver.
-        variables_to_restore = [v for v in tf.all_variables() if "input_producer/limit_epochs/epochs" not in v.name]
-        saver = tf.train.Saver(variables_to_restore)
+        saver = tf.train.Saver()
 
         # Create a session for running operations in the Graph.
         self.session = tf.Session()
@@ -538,8 +552,8 @@ class Net(multiprocessing.Process):
         self.session.run(initialize_op)
 
         # Load model.
-        print('Restoring model from {model_file_path}...'.format(model_file_path=self.restore_model))
-        saver.restore(self.session, self.restore_model)
+        print('Restoring model from {model_file_path}...'.format(model_file_path=self.restore_model_file_name))
+        saver.restore(self.session, self.restore_model_file_name)
 
         # Start input enqueue threads.
         coordinator = tf.train.Coordinator()

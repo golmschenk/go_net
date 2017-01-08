@@ -30,7 +30,7 @@ class Interface:
         args = parser.parse_args()
 
         # Handle any parameters.
-        self.network.restore_model = args.restore_model
+        self.network.restore_model_file_name = args.restore_model
 
         # Run the network.
         if args.test:
