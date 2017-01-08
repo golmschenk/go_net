@@ -30,7 +30,7 @@ class Net(multiprocessing.Process):
             self.settings = Settings()
 
         # Common variables.
-        self.data = Data()
+        self.data = Data(settings=settings)
         self.dropout_keep_probability = 0.5
 
         # Logging.
