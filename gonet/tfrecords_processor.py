@@ -3,7 +3,10 @@ Code for dealing with reading and interacting with TFRecords outside of the main
 """
 
 import numpy as np
+import tensorflow
 import tensorflow as tf
+
+from gonet.data import _int64_feature, _bytes_feature
 
 
 class TFRecordsProcessor:
@@ -139,3 +142,39 @@ class TFRecordsProcessor:
             coordinator.join(threads)
         image_shape = (image_height, image_width, image_depth)
         return image_shape, label_shape
+
+    @staticmethod
+    def write_from_numpy(file_name, image_shape, images, label_shape, labels):
+        """
+        Write a TFRecords from NumPy.
+
+        :param file_name: The file name to write to.
+        :type file_name: str
+        :param image_shape: The size of each image.
+        :type image_shape: (int, int, int)
+        :param images: The NumPy array of images.
+        :type images: np.ndarray
+        :param label_shape: The size of each label.
+        :type label_shape: (int, int, int) | (None, None, None)
+        :param labels: The NumPy array of labels.
+        :type labels: np.ndarray
+        """
+        writer = tf.python_io.TFRecordWriter(file_name)
+        for index in range(images.shape[0]):
+            image_raw = images[index].tostring()
+            features = {
+                'image_height': _int64_feature(image_shape[0]),
+                'image_width': _int64_feature(image_shape[1]),
+                'image_depth': _int64_feature(image_shape[2]),
+                'image_raw': _bytes_feature(image_raw),
+            }
+            if labels is not None:
+                label_raw = labels[index].tostring()
+                features.update({
+                    'label_height': _int64_feature(label_shape[0]),
+                    'label_width': _int64_feature(label_shape[1]),
+                    'label_depth': _int64_feature(label_shape[2]),
+                    'label_raw': _bytes_feature(label_raw)
+                })
+            example = tf.train.Example(features=tf.train.Features(feature=features))
+            writer.write(example.SerializeToString())

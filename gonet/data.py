@@ -4,15 +4,14 @@ Code for managing the TFRecord data.
 import glob
 import json
 import os
+import re
 import h5py
 import numpy as np
 import tensorflow as tf
-import re
-
-from gonet.settings import Settings
-from gonet.tfrecords_processor import TFRecordsProcessor
 
 from gonet.convenience import random_boolean_tensor
+from gonet.settings import Settings
+from gonet.tfrecords_processor import TFRecordsProcessor
 
 
 class Data:
@@ -311,32 +310,16 @@ class Data:
             else:
                 label_depth = 1
         else:
-            label_height, label_width, label_depth = None, None, None  # Line to quiet inspections
+            label_height, label_width, label_depth = None, None, None
         image_height = images.shape[1]
         image_width = images.shape[2]
         image_depth = images.shape[3]
+        image_shape = (image_height, image_width, image_depth)
+        label_shape = (label_height, label_width, label_depth)
 
-        filename = os.path.join(self.settings.data_directory, self.data_name + '.tfrecords')
-        print('Writing', filename)
-        writer = tf.python_io.TFRecordWriter(filename)
-        for index in range(images.shape[0]):
-            image_raw = images[index].tostring()
-            features = {
-                'image_height': _int64_feature(image_height),
-                'image_width': _int64_feature(image_width),
-                'image_depth': _int64_feature(image_depth),
-                'image_raw': _bytes_feature(image_raw),
-            }
-            if labels is not None:
-                label_raw = labels[index].tostring()
-                features.update({
-                    'label_height': _int64_feature(label_height),
-                    'label_width': _int64_feature(label_width),
-                    'label_depth': _int64_feature(label_depth),
-                    'label_raw': _bytes_feature(label_raw)
-                })
-            example = tf.train.Example(features=tf.train.Features(feature=features))
-            writer.write(example.SerializeToString())
+        file_name = os.path.join(self.settings.data_directory, self.data_name + '.tfrecords')
+        print('Writing', file_name)
+        TFRecordsProcessor().write_from_numpy(file_name, image_shape, images, label_shape, labels)
 
     def import_mat_file(self, mat_path):
         """
