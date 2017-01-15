@@ -161,3 +161,4 @@ class Settings:
         """
         os.makedirs(self.logs_directory, exist_ok=True)
         os.makedirs(self.models_directory, exist_ok=True)
+        os.makedirs(self.data_directory, exist_ok=True)

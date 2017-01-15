@@ -10,7 +10,7 @@ import tensorflow as tf
 import re
 
 from gonet.settings import Settings
-from gonet.tfrecords_reader import TFRecordsReader
+from gonet.tfrecords_processor import TFRecordsProcessor
 
 from gonet.convenience import random_boolean_tensor
 
@@ -57,7 +57,7 @@ class Data:
         :return: The read file data including the image data and label data.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        go_tfrecords_reader = TFRecordsReader()
+        go_tfrecords_reader = TFRecordsProcessor()
         image, label = go_tfrecords_reader.create_image_and_label_inputs_from_file_name_queue(file_name_queue,
                                                                                               data_type=data_type)
         image = tf.cast(image, tf.float32)
@@ -319,7 +319,7 @@ class Data:
         filename = os.path.join(self.settings.data_directory, self.data_name + '.tfrecords')
         print('Writing', filename)
         writer = tf.python_io.TFRecordWriter(filename)
-        for index in range(number_of_examples):
+        for index in range(images.shape[0]):
             image_raw = images[index].tostring()
             features = {
                 'image_height': _int64_feature(image_height),

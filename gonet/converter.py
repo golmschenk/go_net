@@ -10,7 +10,7 @@ import numpy as np
 import re
 from PIL import Image
 
-from gonet.tfrecords_reader import TFRecordsReader
+from gonet.tfrecords_processor import TFRecordsProcessor
 
 
 class Converter:
@@ -24,7 +24,7 @@ class Converter:
         Converts a tfrecords file into image and label numpy files.
         """
         os.makedirs(output_numpy_directory, exist_ok=True)
-        images_numpy, labels_numpy = TFRecordsReader().convert_to_numpy(input_tfrecords_path)
+        images_numpy, labels_numpy = TFRecordsProcessor().convert_to_numpy(input_tfrecords_path)
         data_name = os.path.splitext(os.path.basename(input_tfrecords_path))[0]
         output_base_name = os.path.join(output_numpy_directory, data_name)
         np.save('{}_images.npy'.format(output_base_name), images_numpy)

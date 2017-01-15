@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class TFRecordsReader:
+class TFRecordsProcessor:
     """
     A class for dealing with reading and interacting with TFRecords outside of the main network.
     """
