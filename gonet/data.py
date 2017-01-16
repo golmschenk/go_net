@@ -300,23 +300,10 @@ class Data:
             if labels.shape[0] != number_of_examples:
                 raise ValueError("Images count %d does not match label count %d." %
                                  (labels.shape[0], number_of_examples))
-            label_height = labels.shape[1]
-            if len(labels.shape) > 2:
-                label_width = labels.shape[2]
-            else:
-                label_width = 1
-            if len(labels.shape) > 3:
-                label_depth = labels.shape[3]
-            else:
-                label_depth = 1
+            label_shape = labels.shape[1:]
         else:
-            label_height, label_width, label_depth = None, None, None
-        image_height = images.shape[1]
-        image_width = images.shape[2]
-        image_depth = images.shape[3]
-        image_shape = (image_height, image_width, image_depth)
-        label_shape = (label_height, label_width, label_depth)
-
+            label_shape = []
+        image_shape = images.shape[1:]
         file_name = os.path.join(self.settings.data_directory, self.data_name + '.tfrecords')
         print('Writing', file_name)
         TFRecordsProcessor().write_from_numpy(file_name, image_shape, images, label_shape, labels)
@@ -390,14 +377,6 @@ class Data:
                 mat_path = os.path.abspath(os.path.join(file_directory, mat_name))
                 import_file_paths.append(mat_path)
         return import_file_paths
-
-
-def _int64_feature(value):
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-
-def _bytes_feature(value):
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
 if __name__ == '__main__':

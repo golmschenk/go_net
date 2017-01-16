@@ -6,8 +6,6 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from gonet.data import _int64_feature, _bytes_feature
-
 
 class TFRecordsProcessor:
     """
@@ -152,15 +150,17 @@ class TFRecordsProcessor:
         :param file_name: The file name to write to.
         :type file_name: str
         :param image_shape: The size of each image.
-        :type image_shape: (int, int, int)
+        :type image_shape: list[int]
         :param images: The NumPy array of images.
         :type images: np.ndarray
         :param label_shape: The size of each label.
-        :type label_shape: (int, int, int) | (None, None, None)
+        :type label_shape: list[int]
         :param labels: The NumPy array of labels.
         :type labels: np.ndarray
         """
         writer = tf.python_io.TFRecordWriter(file_name)
+        if labels is not None:
+            label_shape += [1] * (3 - len(label_shape))  # Always expand the labels shape to 3D.
         for index in range(images.shape[0]):
             image_raw = images[index].tostring()
             features = {
@@ -201,3 +201,14 @@ class TFRecordsProcessor:
                                   labels_arrays[index])
         if delete_original:
             os.remove(file_name)
+
+
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+if __name__ == '__main__':
+    TFRecordsProcessor().split_tfrecords('/Users/golmschenk/Desktop/sunrgbd_xtion_sun3ddata_brown_bm_6_brown_bm_6.tfrecords', number_of_parts=3)
