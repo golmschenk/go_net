@@ -2,8 +2,8 @@
 Code for dealing with reading and interacting with TFRecords outside of the main network.
 """
 
+import os
 import numpy as np
-import tensorflow
 import tensorflow as tf
 
 from gonet.data import _int64_feature, _bytes_feature
@@ -13,7 +13,8 @@ class TFRecordsProcessor:
     """
     A class for dealing with reading and interacting with TFRecords outside of the main network.
     """
-    def convert_to_numpy(self, file_name, data_type=None):
+
+    def read_to_numpy(self, file_name, data_type=None):
         """
         Reads entire TFRecords file as NumPy.
 
@@ -178,3 +179,25 @@ class TFRecordsProcessor:
                 })
             example = tf.train.Example(features=tf.train.Features(feature=features))
             writer.write(example.SerializeToString())
+
+    def split_tfrecords(self, file_name, number_of_parts=2, delete_original=False):
+        """
+        Split the TFRecords into multiple parts of equal size.
+
+        :param file_name: The file name to split.
+        :type file_name: str
+        :param number_of_parts: The number of parts to split the file into.
+        :type number_of_parts: int
+        :param delete_original: Whether or not to delete the original file.
+        :type delete_original: bool
+        """
+        images, labels = self.read_to_numpy(file_name)
+        images_arrays = np.array_split(images, number_of_parts)
+        labels_arrays = np.array_split(labels, number_of_parts)
+        for index in range(len(images_arrays)):
+            file_name_without_extension, extension = os.path.splitext(file_name)
+            part_file_name = '{}_{}{}'.format(file_name_without_extension, index, extension)
+            self.write_from_numpy(part_file_name, images.shape[1:], images_arrays[index], labels.shape[1:],
+                                  labels_arrays[index])
+        if delete_original:
+            os.remove(file_name)
