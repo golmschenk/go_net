@@ -160,7 +160,7 @@ class TFRecordsProcessor:
         """
         writer = tf.python_io.TFRecordWriter(file_name)
         if labels is not None:
-            label_shape += [1] * (3 - len(label_shape))  # Always expand the labels shape to 3D.
+            label_shape += (1,) * (3 - len(label_shape))  # Always expand the labels shape to 3D.
         for index in range(images.shape[0]):
             image_raw = images[index].tostring()
             features = {
@@ -209,6 +209,3 @@ def _int64_feature(value):
 
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-if __name__ == '__main__':
-    TFRecordsProcessor().split_tfrecords('/Users/golmschenk/Desktop/sunrgbd_xtion_sun3ddata_brown_bm_6_brown_bm_6.tfrecords', number_of_parts=3)
