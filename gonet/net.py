@@ -52,7 +52,7 @@ class Net(multiprocessing.Process):
                                                                self.settings.learning_rate_decay_rate)
         self.queue = message_queue
         self.predicted_test_labels = None
-        self.train_step = 0
+        self.test_step = 0
 
         os.nice(10)
 
@@ -572,12 +572,12 @@ class Net(multiprocessing.Process):
         try:
             while not coordinator.should_stop() and not self.stop_signal:
                 self.test_run_loop_step()
-                self.train_step += 1
+                self.test_step += 1
         except tf.errors.OutOfRangeError:
-            if self.train_step == 0:
+            if self.test_step == 0:
                 print('Data not found.')
             else:
-                print('Done predicting after %d steps.' % self.train_step)
+                print('Done predicting after %d steps.' % self.test_step)
         finally:
             # When done, ask the threads to stop.
             coordinator.request_stop()
@@ -604,7 +604,7 @@ class Net(multiprocessing.Process):
             feed_dict={**self.default_feed_dictionary, self.dropout_keep_probability_tensor: 1.0}
         )
         self.predicted_test_labels = np.concatenate((self.predicted_test_labels, predicted_labels_batch))
-        print('{image_count} images processed.'.format(image_count=(self.train_step + 1) * self.settings.batch_size))
+        print('{image_count} images processed.'.format(image_count=(self.test_step + 1) * self.settings.batch_size))
 
     def test_run_postloop(self):
         """
