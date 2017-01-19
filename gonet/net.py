@@ -40,7 +40,6 @@ class Net(multiprocessing.Process):
         self.image_summary_on = True
 
         # Internal setup.
-        self.restore_model_file_name = None
         self.stop_signal = False
         self.global_step = tf.Variable(0, name='global_step', trainable=False)
         self.saver = None
@@ -113,7 +112,7 @@ class Net(multiprocessing.Process):
         self.session.run(initialize_op)
 
         # Restore from saved model if passed.
-        if self.restore_model_file_name:
+        if self.settings.restore_model_file_name:
             self.model_restore()
 
         # Start input enqueue threads.
@@ -177,7 +176,7 @@ class Net(multiprocessing.Process):
         """
         Restores a saved model.
         """
-        print('Restoring model from %s...' % self.restore_model_file_name)
+        print('Restoring model from %s...' % self.settings.restore_model_file_name)
         if self.settings.restore_mode == 'continue':
             variables_to_restore = None  # All variables.
         elif self.settings.restore_mode == 'transfer':
@@ -186,7 +185,7 @@ class Net(multiprocessing.Process):
         else:
             raise ValueError('\'{}\' is not a valid restore mode.'.format(self.settings.restore_mode))
         restorer = tf.train.Saver(var_list=variables_to_restore)
-        restorer.restore(self.session, self.restore_model_file_name)
+        restorer.restore(self.session, self.settings.restore_model_file_name)
 
     def create_inference_op(self, images):
         """
@@ -524,9 +523,9 @@ class Net(multiprocessing.Process):
         """
         Use a trained model to predict labels for a test set of images.
         """
-        if self.restore_model_file_name is None:
-            self.restore_model_file_name = self.attain_latest_model_path()
-            if not self.restore_model_file_name:
+        if self.settings.restore_model_file_name is None:
+            self.settings.restore_model_file_name = self.attain_latest_model_path()
+            if not self.settings.restore_model_file_name:
                 print('No model to restore from found.')
                 return
 
@@ -552,8 +551,8 @@ class Net(multiprocessing.Process):
         self.session.run(initialize_op)
 
         # Load model.
-        print('Restoring model from {model_file_path}...'.format(model_file_path=self.restore_model_file_name))
-        saver.restore(self.session, self.restore_model_file_name)
+        print('Restoring model from {model_file_path}...'.format(model_file_path=self.settings.restore_model_file_name))
+        saver.restore(self.session, self.settings.restore_model_file_name)
 
         # Start input enqueue threads.
         coordinator = tf.train.Coordinator()
