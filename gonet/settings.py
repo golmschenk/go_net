@@ -18,6 +18,7 @@ class Settings:
         self.initial_learning_rate = 0.0001
         self.learning_rate_decay_rate = 0.1
         self.learning_rate_decay_steps = 100000
+        self.run_mode = 'train'
 
         # Advanced settings
         self.scopes_to_train = None  # The list of scopes or None for all scopes.
