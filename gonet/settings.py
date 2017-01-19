@@ -13,6 +13,7 @@ class Settings:
         self.network_name = 'go_net'
 
         # Common settings
+        self.inference_op_name = 'shallow_net'
         self.batch_size = 3
         self.initial_learning_rate = 0.0001
         self.learning_rate_decay_rate = 0.1

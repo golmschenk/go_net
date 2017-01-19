@@ -191,12 +191,20 @@ class Net(multiprocessing.Process):
         """
         Performs a forward pass estimating label maps from RGB images.
 
+        Using `getattr` is typically a bad enough choice, that an explanation is warranted here. During experiments
+        inference functions are quickly added, removed, and changed for testing. It's inconvenient to require a case
+        switch in this case. This code is only to be run by the researcher (myself) so there are no security issues.
+
         :param images: The RGB images tensor.
         :type images: tf.Tensor
         :return: The label maps tensor.
         :rtype: tf.Tensor
         """
-        return tf.identity(self.create_shallow_net_inference_op(images), name='inference_op')
+        try:
+            inference_op = getattr(self, self.settings.inference_op_name)
+        except AttributeError:
+            inference_op = getattr(self, 'create_{}_inference_op'.format(self.settings.inference_op_name))
+        return tf.identity(inference_op(images), name='inference_op')
 
     def mercury_module(self, variable_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
                        max_pool_depth, dropout_on=False, normalization_function=None,
