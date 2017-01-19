@@ -546,7 +546,7 @@ class Net(multiprocessing.Process):
         self.create_inference_op(images_tensor)
 
         # The op for initializing the variables.
-        initialize_op = tf.group(tf.initialize_all_variables(), tf.initialize_local_variables())
+        initialize_op = tf.group(tf.global_variables_initializer(), tf.initialize_local_variables())
 
         # Prepare the saver.
         saver = tf.train.Saver()
