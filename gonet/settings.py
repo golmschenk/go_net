@@ -166,3 +166,14 @@ class Settings:
         os.makedirs(self.logs_directory, exist_ok=True)
         os.makedirs(self.models_directory, exist_ok=True)
         os.makedirs(self.data_directory, exist_ok=True)
+
+    def __setattr__(self, name, value):
+        """
+        Altering this to warn about setting attributes not used elsewhere (i.e. warn of setting typo).
+        """
+        if issubclass(self.__class__, Settings) and name not in dir(Settings):
+            super().__setattr__(name, value)
+        else:
+            print('Warning: {} is not defined in the base settings class. Perhaps there is a typo?'.format(name))
+            input('Click enter to continue anyway.')
+            super().__setattr__(name, value)
