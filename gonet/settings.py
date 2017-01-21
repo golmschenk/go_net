@@ -21,9 +21,10 @@ class Settings:
         self.run_mode = 'train'
 
         # Advanced settings
-        self.scopes_to_train = None  # The list of scopes or None for all scopes.
         self.restore_model_file_name = None
         self.restore_mode = 'continue'  # Should be 'continue' or 'transfer' (for transfer learning).
+        self.scopes_to_train = None  # The list of scopes or None for all scopes.
+        self.restore_scopes_to_exclude = None
 
         # Logging and saving
         self.print_step_period = 1
