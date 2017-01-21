@@ -182,10 +182,11 @@ class Net(multiprocessing.Process):
         elif self.settings.restore_mode == 'transfer':
             # Only restore trainable variables (i.e. don't restore global step, decayed learning rate, and the like).
             variables_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-            for scope in self.settings.restore_scopes_to_exclude:
-                for variable_to_exclude in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope):
-                    if variable_to_exclude in variables_to_restore:
-                        variables_to_restore.remove(variable_to_exclude)
+            if self.settings.restore_scopes_to_exclude:
+                for scope in self.settings.restore_scopes_to_exclude:
+                    for variable_to_exclude in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope):
+                        if variable_to_exclude in variables_to_restore:
+                            variables_to_restore.remove(variable_to_exclude)
         else:
             raise ValueError('\'{}\' is not a valid restore mode.'.format(self.settings.restore_mode))
         restorer = tf.train.Saver(var_list=variables_to_restore)
