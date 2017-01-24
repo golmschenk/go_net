@@ -172,6 +172,6 @@ class Settings:
         Altering this to warn about setting attributes not used elsewhere (i.e. warn of setting typo).
         """
         if self.__class__ is not Settings and name not in dir(Settings()):
-            print('Warning: {} is not defined in the base settings class. Perhaps there is a typo?'.format(name))
+            print('Warning: \'{}\' is not defined in the base settings class. Perhaps there is a typo?'.format(name))
             input('Click enter to continue anyway.')
         super().__setattr__(name, value)
