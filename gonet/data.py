@@ -371,7 +371,7 @@ class Data:
         :rtype: list[str]
         """
         import_file_paths = []
-        for file_directory, _, file_names in os.walk(os.path.join(self.settings.data_directory, 'import')):
+        for file_directory, _, file_names in os.walk(self.settings.import_directory):
             mat_names = [file_name for file_name in file_names if file_name.endswith('.mat')]
             for mat_name in mat_names:
                 mat_path = os.path.abspath(os.path.join(file_directory, mat_name))
