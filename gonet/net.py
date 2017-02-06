@@ -84,7 +84,7 @@ class Net(multiprocessing.Process):
         with tf.variable_scope('loss'):
             loss_tensor = self.create_loss_tensor(predicted_labels_tensor, labels_tensor)
             reduce_mean_loss_tensor = tf.reduce_mean(loss_tensor)
-            tf.scalar_summary(self.step_summary_name, reduce_mean_loss_tensor)
+            tf.summary.scalar(self.step_summary_name, reduce_mean_loss_tensor)
 
         if self.image_summary_on:
             with tf.variable_scope('comparison_summary'):
@@ -94,12 +94,12 @@ class Net(multiprocessing.Process):
         training_op = self.create_training_op(value_to_minimize=reduce_mean_loss_tensor)
 
         # Prepare the summary operations.
-        summaries_op = tf.merge_all_summaries()
+        summaries_op = tf.summary.merge_all()
         summary_path = os.path.join(self.settings.logs_directory, self.settings.network_name + ' ' +
                                     datetime.datetime.now().strftime("y%Y_m%m_d%d_h%H_m%M_s%S"))
         self.log_source_files(summary_path + '_source')
-        train_writer = tf.train.SummaryWriter(summary_path + '_train', self.session.graph)
-        validation_writer = tf.train.SummaryWriter(summary_path + '_validation', self.session.graph)
+        train_writer = tf.summary.FileWriter(summary_path + '_train', self.session.graph)
+        validation_writer = tf.summary.FileWriter(summary_path + '_validation', self.session.graph)
 
         # The op for initializing the variables.
         initialize_op = tf.global_variables_initializer()
@@ -392,7 +392,7 @@ class Net(multiprocessing.Process):
         :return: The training op.
         :rtype: tf.Operation
         """
-        tf.scalar_summary('Learning rate', self.learning_rate_tensor)
+        tf.summary.scalar('Learning rate', self.learning_rate_tensor)
         variables_to_train = self.attain_variables_to_train()
         return tf.train.AdamOptimizer(self.learning_rate_tensor).minimize(value_to_minimize,
                                                                           global_step=self.global_step,
@@ -447,7 +447,7 @@ class Net(multiprocessing.Process):
         concatenated_heat_maps = self.convert_to_heat_map_rgb(concatenated_labels)
         display_images = tf.div(images, tf.reduce_max(tf.abs(images)))
         comparison_image = tf.concat(1, [display_images, concatenated_heat_maps])
-        tf.image_summary('comparison', comparison_image)
+        tf.summary.image('comparison', comparison_image)
 
     def interface_handler(self):
         """

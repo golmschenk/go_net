@@ -2,7 +2,6 @@
 Interface to help interact with the neural networks.
 """
 import multiprocessing
-import argparse
 
 
 class Interface:
