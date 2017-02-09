@@ -3,6 +3,13 @@ The installer file.
 """
 
 from setuptools import setup
+from subprocess import run
+
+completed_process = run(['nvcc', '--version'])
+if completed_process.returncode:
+    tensorflow_postfix = ''
+else:
+    tensorflow_postfix = '-gpu'
 
 setup(
     name='gonet',
@@ -16,7 +23,7 @@ setup(
         goconverter=gonet.converter:command_line_interface
     ''',
     install_requires=[
-        'tensorflow',
+        'tensorflow{}'.format(tensorflow_postfix),
         'h5py'
     ]
 )
