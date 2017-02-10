@@ -135,6 +135,19 @@ class Settings:
         """
         return self.label_height, self.label_width, self.label_depth
 
+    @property
+    def restore_model_file_path(self):
+        """
+        The path to the restore model.
+
+        :return: The path to the restore model.
+        :rtype: str
+        """
+        if self.restore_model_file_name:
+            return os.path.join(self.models_directory, self.restore_model_file_name)
+        else:
+            return None
+
     @label_shape.setter
     def label_shape(self, shape):
         self.label_height, self.label_width, self.label_depth = shape
