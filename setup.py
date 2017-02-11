@@ -6,9 +6,9 @@ import os
 from setuptools import setup
 
 if os.path.isdir("/usr/local/cuda"):
-    tensorflow_postfix = ''
-else:
     tensorflow_postfix = '-gpu'
+else:
+    tensorflow_postfix = ''
 
 setup(
     name='gonet',
