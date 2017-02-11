@@ -1,12 +1,11 @@
 """
 The installer file.
 """
+import os
 
 from setuptools import setup
-from subprocess import run
 
-completed_process = run(['nvcc', '--version'])
-if completed_process.returncode:
+if os.path.isdir("/usr/local/cuda"):
     tensorflow_postfix = ''
 else:
     tensorflow_postfix = '-gpu'
