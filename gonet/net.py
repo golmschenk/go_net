@@ -31,7 +31,7 @@ class Net(multiprocessing.Process):
 
         # Common variables.
         self.data = Data(settings=settings)
-        self.dropout_keep_probability = 0.5
+        self.training_dropout_keep_probability = 0.5
 
         # Logging.
         self.step_summary_name = "Loss per pixel"
@@ -58,7 +58,7 @@ class Net(multiprocessing.Process):
     def default_feed_dictionary(self):
         """The default feed dictionary"""
         return {
-            self.dropout_keep_probability_tensor: self.dropout_keep_probability,
+            self.dropout_keep_probability_tensor: self.training_dropout_keep_probability,
             self.dataset_selector_tensor: 'train',
         }
 
