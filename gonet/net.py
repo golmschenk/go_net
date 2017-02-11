@@ -34,8 +34,6 @@ class Net(multiprocessing.Process):
         self.dropout_keep_probability = 0.5
 
         # Logging.
-        self.summary_step_period = 1
-        self.validation_step_period = 10
         self.step_summary_name = "Loss per pixel"
         self.image_summary_on = True
 
@@ -300,7 +298,7 @@ class Net(multiprocessing.Process):
         if strided_max_pool_on:
             tensor = max_pool2d(tensor, kernel_size=3, stride=2, padding='VALID')
         if dropout_on:
-            tensor = dropout(tensor, self.dropout_keep_probability)
+            tensor = dropout(tensor, self.dropout_keep_probability_tensor)
         return tensor
 
     def create_shallow_net_inference_op(self, images):
