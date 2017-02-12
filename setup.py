@@ -22,6 +22,7 @@ setup(
         goconverter=gonet.converter:command_line_interface
     ''',
     install_requires=[
+        'scipy',
         'tensorflow{}'.format(tensorflow_postfix),
         'h5py'
     ]
