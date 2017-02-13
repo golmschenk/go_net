@@ -21,6 +21,9 @@ class Net(multiprocessing.Process):
     """
     The class to build and interact with the GoNet TensorFlow graph.
     """
+    # Defaults.
+    default_activation = leaky_relu
+    default_normalization = None
 
     def __init__(self, message_queue=None, settings=None):
         super().__init__()
@@ -210,8 +213,8 @@ class Net(multiprocessing.Process):
         return tf.identity(inference_op(images), name='inference_op')
 
     def mercury_module(self, variable_scope, input_tensor, aisle_convolution_depth, spatial_convolution_depth,
-                       max_pool_depth, dropout_on=False, normalization_function=None,
-                       activation_function=leaky_relu, strided_max_pool_on=False):
+                       max_pool_depth, dropout_on=False, normalization_function=default_normalization,
+                       activation_function=default_activation, strided_max_pool_on=False):
         """
         This module has 4 parts. A simple 1x1 dimensionality shift (the aisle convolution), a 1x3 convolution, a 3x1
         convolution, and a 2x2 max pooling with dimensionality shift. All have stride of 1. The outputs of each part are
@@ -253,7 +256,8 @@ class Net(multiprocessing.Process):
             return output_tensor
 
     def terra_module(self, variable_scope, input_tensor, convolution_output_depth, kernel_size=3, dropout_on=False,
-                     normalization_function=None, activation_function=leaky_relu, strided_max_pool_on=False):
+                     normalization_function=default_normalization, activation_function=default_activation,
+                     strided_max_pool_on=False):
         """
         A basic square 2D convolution layer followed by optional batch norm and dropout.
 
@@ -535,7 +539,6 @@ class Net(multiprocessing.Process):
         Use a trained model to predict labels for a test set of images.
         """
         if self.settings.restore_model_file_path is None:
-
             print('No model to restore from found.')
             return
 
