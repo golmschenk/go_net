@@ -171,6 +171,7 @@ class Settings:
         self.data_directory = '/home/golmschenk/storage/data'
         self.logs_directory = '/home/golmschenk/storage/logs'
         self.models_directory = '/home/golmschenk/storage/models'
+        self.import_directory = '/home/golmschenk/storage/import'
 
     def create_needed_paths(self):
         """
