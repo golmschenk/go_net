@@ -12,7 +12,7 @@ else:
 
 setup(
     name='gonet',
-    version='0.1.7',
+    version='0.1.8',
     description='The Go Net.',
     url='https://github.com/golmschenk/go_net',
     license='MIT',
