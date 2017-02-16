@@ -65,7 +65,7 @@ def leaky_relu(x):
     :return: The tensor filtering on the leaky activation.
     :rtype: tf.Tensor
     """
-    return tf.maximum(tf.mul(leaky_relu_leakiness, x), x)
+    return tf.maximum(tf.multiply(leaky_relu_leakiness, x), x)
 
 
 def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, conv_width=3, strides=(1, 1, 1, 1),
@@ -97,8 +97,8 @@ def conv_layer(scope_name, input_tensor, depth_in, depth_out, conv_height=3, con
         biases = bias_variable([depth_out])
         output_tensor = leaky_relu(conv2d(input_tensor, weights, strides=strides) + biases)
         if histogram_summary:
-            tf.histogram_summary(scope_name + '_weights', weights)
-            tf.histogram_summary(scope_name + '_activations', output_tensor)
+            tf.summary.histogram(scope_name + '_weights', weights)
+            tf.summary.histogram(scope_name + '_activations', output_tensor)
         return output_tensor
 
 

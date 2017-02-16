@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import convolution2d, summarize_weights, max_pool2d, dropout
+from tensorflow.contrib.layers import convolution2d, max_pool2d, dropout
 
 from gonet.data import Data
 from gonet.interface import Interface
@@ -251,7 +251,7 @@ class Net(multiprocessing.Process):
             max_pool_output = max_pool2d(input_tensor, kernel_size=2, stride=1, padding='SAME')
             part4 = convolution2d(max_pool_output, max_pool_depth, [1, 1], activation_fn=activation_function,
                                   normalizer_fn=normalization_function)
-            output_tensor = tf.concat(3, [part1, part2, part3, part4])
+            output_tensor = tf.concat(axis=3, values=[part1, part2, part3, part4])
             output_tensor = self.general_module_end_operations(output_tensor, dropout_on, strided_max_pool_on)
             return output_tensor
 
@@ -319,8 +319,6 @@ class Net(multiprocessing.Process):
         module3_output = self.mercury_module('module3', module2_output, 16, 32, 32)
 
         predicted_labels = convolution2d(module3_output, 1, kernel_size=1)
-
-        summarize_weights()
 
         return predicted_labels
 
@@ -423,13 +421,13 @@ class Net(multiprocessing.Process):
         :return: The heat map image tensor.
         :rtype: tf.Tensor
         """
-        maximum = tf.reduce_max(tensor, reduction_indices=[1, 2, 3], keep_dims=True)
-        minimum = tf.reduce_min(tensor, reduction_indices=[1, 2, 3], keep_dims=True)
+        maximum = tf.reduce_max(tensor, axis=[1, 2, 3], keep_dims=True)
+        minimum = tf.reduce_min(tensor, axis=[1, 2, 3], keep_dims=True)
         ratio = 2 * (tensor - minimum) / (maximum - minimum)
         b = tf.maximum(0.0, (1 - ratio))
         r = tf.maximum(0.0, (ratio - 1))
         g = 1 - b - r
-        return (tf.concat(3, [r, g, b]) * 2) - 1
+        return (tf.concat(axis=3, values=[r, g, b]) * 2) - 1
 
     def image_comparison_summary(self, images, labels, predicted_labels, label_differences):
         """
@@ -445,10 +443,10 @@ class Net(multiprocessing.Process):
         :param label_differences: The tensor containing the difference between the actual and predicted labels.
         :type label_differences: tf.Tensor
         """
-        concatenated_labels = tf.concat(1, [labels, predicted_labels, label_differences])
+        concatenated_labels = tf.concat(axis=1, values=[labels, predicted_labels, label_differences])
         concatenated_heat_maps = self.convert_to_heat_map_rgb(concatenated_labels)
         display_images = tf.div(images, tf.reduce_max(tf.abs(images)))
-        comparison_image = tf.concat(1, [display_images, concatenated_heat_maps])
+        comparison_image = tf.concat(axis=1, values=[display_images, concatenated_heat_maps])
         tf.summary.image('comparison', comparison_image)
 
     def interface_handler(self):
