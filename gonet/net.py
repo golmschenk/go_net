@@ -282,7 +282,8 @@ class Net(multiprocessing.Process):
         """
         with tf.variable_scope(variable_scope):
             output_tensor = convolution2d(input_tensor, convolution_output_depth, [kernel_size, kernel_size],
-                                          activation_fn=activation_function, normalizer_fn=normalization_function)
+                                          activation_fn=activation_function, normalizer_fn=normalization_function,
+                                          padding='same')
             output_tensor = self.general_module_end_operations(output_tensor, dropout_on, strided_max_pool_on)
             return output_tensor
 
