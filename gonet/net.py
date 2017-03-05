@@ -569,6 +569,7 @@ class Net(multiprocessing.Process):
         # Start input enqueue threads.
         coordinator = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=self.session, coord=coordinator)
+        self.settings.batch_size = 1
 
         self.test_run_preloop()
 
