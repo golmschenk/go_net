@@ -537,6 +537,7 @@ class Net(multiprocessing.Process):
         """
         Use a trained model to predict labels for a test set of images.
         """
+        self.settings.batch_size = 1
         if self.settings.restore_model_file_path is None:
             print('No model to restore from found.')
             return
@@ -569,7 +570,6 @@ class Net(multiprocessing.Process):
         # Start input enqueue threads.
         coordinator = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=self.session, coord=coordinator)
-        self.settings.batch_size = 1
 
         self.test_run_preloop()
 
