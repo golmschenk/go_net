@@ -202,6 +202,34 @@ class TFRecordsProcessor:
         if delete_original:
             os.remove(file_name)
 
+    def quadrantize_tfrecords(self, file_name):
+        """
+        Split the TFRecords into 4 parts spatial by quadrant.
+
+        :param file_name: The file name to split.
+        :type file_name: str
+        """
+        images, labels = self.read_to_numpy(file_name)
+        images_top, images_bottom = np.array_split(images, 2, axis=1)
+        labels_top, labels_bottom = np.array_split(labels, 2, axis=1)
+        images_quadrant_2, images_quadrant_1 = np.array_split(images_top, 2, axis=2)
+        images_quadrant_3, images_quadrant_4 = np.array_split(images_bottom, 2, axis=2)
+        labels_quadrant_2, labels_quadrant_1 = np.array_split(labels_top, 2, axis=2)
+        labels_quadrant_3, labels_quadrant_4 = np.array_split(labels_bottom, 2, axis=2)
+        file_name_without_extension, extension = os.path.splitext(file_name)
+        quadrant_1_file_name = '{}_{}{}'.format(file_name_without_extension, 'quadrant_1', extension)
+        self.write_from_numpy(quadrant_1_file_name, images_quadrant_1.shape[1:], images_quadrant_1,
+                              labels_quadrant_1.shape[1:], labels_quadrant_1)
+        quadrant_2_file_name = '{}_{}{}'.format(file_name_without_extension, 'quadrant_2', extension)
+        self.write_from_numpy(quadrant_2_file_name, images_quadrant_2.shape[1:], images_quadrant_2,
+                              labels_quadrant_2.shape[1:], labels_quadrant_2)
+        quadrant_3_file_name = '{}_{}{}'.format(file_name_without_extension, 'quadrant_3', extension)
+        self.write_from_numpy(quadrant_3_file_name, images_quadrant_3.shape[1:], images_quadrant_3,
+                              labels_quadrant_3.shape[1:], labels_quadrant_3)
+        quadrant_4_file_name = '{}_{}{}'.format(file_name_without_extension, 'quadrant_4', extension)
+        self.write_from_numpy(quadrant_4_file_name, images_quadrant_4.shape[1:], images_quadrant_4,
+                              labels_quadrant_4.shape[1:], labels_quadrant_4)
+
 
 def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
