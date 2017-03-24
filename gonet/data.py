@@ -172,7 +172,7 @@ class Data:
             )
         else:
             images, labels = tf.train.shuffle_batch(
-                [image, label], batch_size=batch_size, num_threads=2,
+                [image, label], batch_size=batch_size, num_threads=4,
                 capacity=1000 + 3 * batch_size, min_after_dequeue=1000
             )
 
