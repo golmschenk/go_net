@@ -202,6 +202,21 @@ class TFRecordsProcessor:
         if delete_original:
             os.remove(file_name)
 
+    def shuffle_tfrecords(self, file_name):
+        """
+        Split the TFRecords into multiple parts of equal size.
+
+        :param file_name: The file name to split.
+        :type file_name: str
+        """
+        images, labels = self.read_to_numpy(file_name)
+        index_permutation = np.random.permutation(images.shape[0])
+        shuffled_images, shuffled_labels = images[index_permutation], labels[index_permutation]
+        file_name_without_extension, extension = os.path.splitext(file_name)
+        shuffled_file_name = '{}_shuffled{}'.format(file_name_without_extension, extension)
+        self.write_from_numpy(shuffled_file_name, shuffled_images.shape[1:], shuffled_images, shuffled_labels.shape[1:],
+                              shuffled_labels)
+
     def quadrantize_tfrecords(self, file_name):
         """
         Split the TFRecords into 4 parts spatial by quadrant.
