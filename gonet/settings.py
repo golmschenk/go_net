@@ -19,6 +19,7 @@ class Settings:
         self.learning_rate_decay_rate = 0.1
         self.learning_rate_decay_steps = 100000
         self.run_mode = 'train'
+        self.norbu = False
 
         # Advanced settings
         self.restore_model_file_name = None
@@ -168,10 +169,16 @@ class Settings:
         """
         Updates the settings for running in a AWS instance.
         """
-        self.data_directory = '/home/golmschenk/storage/data'
-        self.logs_directory = '/home/golmschenk/storage/logs'
-        self.models_directory = '/home/golmschenk/storage/models'
-        self.import_directory = '/home/golmschenk/storage/import'
+        if self.norbu:
+            self.import_directory = '/home/ntersing/storage/import'
+            self.data_directory = '/home/ntersing/storage/data'
+            self.models_directory = '/home/ntersing/storage/n_models'
+            self.logs_directory = '/home/ntersing/storage/n_logs'
+        else:
+            self.data_directory = '/home/golmschenk/storage/data'
+            self.logs_directory = '/home/golmschenk/storage/logs'
+            self.models_directory = '/home/golmschenk/storage/models'
+            self.import_directory = '/home/golmschenk/storage/import'
 
     def create_needed_paths(self):
         """
