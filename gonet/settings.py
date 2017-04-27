@@ -3,6 +3,7 @@ Code for the settings of the network.
 """
 import os
 import subprocess
+import getpass
 
 
 class Settings:
@@ -169,11 +170,11 @@ class Settings:
         """
         Updates the settings for running in a AWS instance.
         """
-        if self.norbu:
-            self.import_directory = '/home/ntersing/storage/import'
-            self.data_directory = '/home/ntersing/storage/data'
-            self.models_directory = '/home/ntersing/storage/n_models'
-            self.logs_directory = '/home/ntersing/storage/n_logs'
+        if getpass.getuser() == 'ntsering':
+            self.import_directory = '/home/ntsering/storage/import'
+            self.data_directory = '/home/ntsering/storage/data'
+            self.models_directory = '/home/ntsering/storage/n_models'
+            self.logs_directory = '/home/ntsering/storage/n_logs'
         else:
             self.data_directory = '/home/golmschenk/storage/data'
             self.logs_directory = '/home/golmschenk/storage/logs'
