@@ -146,12 +146,12 @@ class Data:
 
         if data_type in ['test', 'deploy']:
             images, labels = tf.train.batch(
-                [image, label], batch_size=batch_size, num_threads=1, capacity=1000 + 3 * batch_size
+                [image, label], batch_size=batch_size, num_threads=1, capacity=500 + 3 * batch_size
             )
         else:
             images, labels = tf.train.shuffle_batch(
                 [image, label], batch_size=batch_size, num_threads=4,
-                capacity=1000 + 3 * batch_size, min_after_dequeue=1000
+                capacity=500 + 3 * batch_size, min_after_dequeue=500
             )
 
         return images, labels
