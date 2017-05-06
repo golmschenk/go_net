@@ -93,19 +93,6 @@ class Data:
         image = tf.image.per_image_standardization(image)
         return image, label
 
-    @staticmethod
-    def horizontally_flip_label(label):
-        """
-        Changes the label in such a way that it matches its corresponding image if it's been horizontally flipped.
-        Should be overridden depending on the type of label data.
-
-        :param label: The label to be "flipped".
-        :type label: tf.Tensor
-        :return: The "flipped" label.
-        :rtype: tf.Tensor
-        """
-        return tf.image.flip_left_right(label)
-
     def randomly_flip_horizontally(self, image, label):
         """
         Simultaneously and randomly flips the image and label horizontally, such that they still match after flipping.
@@ -117,17 +104,8 @@ class Data:
         :return: The image and label which may be flipped.
         :rtype: (tf.Tensor, tf.Tensor)
         """
-        should_flip = random_boolean_tensor()
-        image = tf.cond(
-            should_flip,
-            lambda: tf.image.flip_left_right(image),
-            lambda: image
-        )
-        label = tf.cond(
-            should_flip,
-            lambda: self.horizontally_flip_label(label),
-            lambda: label
-        )
+        image = tf.image.random_flip_left_right(image, seed=0)
+        label = tf.image.random_flip_left_right(label, seed=0)
         return image, label
 
     def augment(self, image, label):
