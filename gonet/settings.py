@@ -46,6 +46,7 @@ class Settings:
         self.logs_directory = 'logs'
         self.models_directory = 'models'
         self.import_directory = 'data/import'
+        self.restore_checkpoint_directory = None
         # Note, these use regex.
         self.train_pattern = '.*'
         self.validation_pattern = '.*'
