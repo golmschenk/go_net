@@ -176,6 +176,11 @@ class Settings:
             self.data_directory = '/home/ntsering/storage/data'
             self.models_directory = '/home/ntsering/storage/n_models'
             self.logs_directory = '/home/ntsering/storage/n_logs'
+        elif getpass.getuser() == 'elmtang':
+            self.import_directory = '/home/elmtang/storage/import'
+            self.data_directory = '/home/elmtang/storage/data'
+            self.models_directory = '/home/elmtang/storage/elmtang_models'
+            self.logs_directory = '/home/elmtang/storage/elmtang_logs'
         else:
             self.data_directory = '/home/golmschenk/storage/data'
             self.logs_directory = '/home/golmschenk/storage/logs'
