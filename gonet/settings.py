@@ -28,6 +28,7 @@ class Settings:
         self.scopes_to_train = None  # The list of scopes or None for all scopes.
         self.restore_scopes_to_exclude = None
         self.test_validation_swap = False
+        self.test_with_predictor = False
 
         # Logging and saving
         self.print_step_period = 1
